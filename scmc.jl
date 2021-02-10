@@ -5,7 +5,7 @@ include("hamiltonian.jl")
 "Generate a random state (normalized) of shape (3, Ns, Nx, Ny)"
 function randomstate(Ns, Nx, Ny)
     vec = randn((3, Ns, Nx, Ny))
-    mapslices(v, dims=1) do u
+    mapslices(vec, dims=1) do u
         normalize!(u)
     end
     vec
