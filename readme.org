@@ -1,5 +1,5 @@
 * TODO How it works
-1. [ ] Generate a random state vector
+1. [X] Generate a random state vector
 2. [ ] Monte Carlo steps for convergence
 3. [ ] Compute known values, like energy or magnetization
 4. [ ] Determine the step for decorrelation
