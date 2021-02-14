@@ -1,6 +1,12 @@
-module LoadHamiltonian
+module HamiltonianMod
 
-export loadparamhamiltonian, loadhamiltonian
+using LinearAlgebra
+
+export loadparamhamiltonian, loadhamiltonian, localfield, energy
+
+function wrapindex(i, L)
+    1 + (i - 1) % L
+end
 
 function iscomment(line)
     line == "" || line[1] == '#'
@@ -64,5 +70,34 @@ end
 function loadhamiltonian(path, couplings)
     mkhamiltonian(loadparamhamiltonian(path), couplings)
 end
+
+function localfield(H, v, i, j, s)
+    L = size(v)[3]
+    sum(map(H.couplings[s]) do (Δi, Δj, s2, c)
+        c * v[:, s2,
+              wrapindex(i + Δi, L),
+              wrapindex(j + Δj, L)]
+        end)
+end
+
+"Compute the energy per site of the given state"
+function energy(H, v)
+    L = size(v)[3]
+    # simply the sum of spin . local field
+    E = 0
+    
+    for s in 1:H.Ns
+        for j in 1:L
+            for i in 1:L
+                S = v[:, s, i, j]
+                h = localfield(H, v, i, j, s)
+                E += dot(S, h)
+            end
+        end
+    end
+
+    E / (H.Ns * L^2)
+end
+
 
 end
