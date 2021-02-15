@@ -54,13 +54,50 @@ function mcstep!(H, v, T, niter=1; E=nothing)
             v[:, s, i, j] = uold
         end
     end
-
     E
 end
 
 "Computes the magnetization, that is the mean of all spins (thus a 3D vector)"
 function magnetization(v)
     sum(v; dims=(2, 3, 4)) / length(v) * 3
+end
+
+function correlation(v1, v2)
+    sum(v1 .* v2) / length(v1)
+end
+
+# -----------------------------------------------------------------------------
+# Dev stuff
+# -----------------------------------------------------------------------------
+
+"Use this function to find which stride to put to have a small enough correlation betwen consecutive samples"
+function findcorrelation()
+    H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
+    L = 5
+    T = 1
+    N = H.Ns * L^2
+    nsamples = 100
+
+    # initial state
+    v = randomstate(H.Ns, L)
+    v0 = copy(v)
+
+    # mesurements
+    E = zeros(nsamples)
+    m = zeros(3, nsamples)
+    corr = zeros(nsamples)
+
+    E[1] = energy(H, v)
+    m[:, 1] = magnetization(v)
+    corr[1] = correlation(v0, v)
+
+    for i = 2:nsamples
+        E[i] = mcstep!(H, v, T, 1; E=E[i-1])
+        m[:, i] = magnetization(v)
+        corr[i] = correlation(v0, v)
+        println(i)
+    end
+    E, m, corr
 end
 
 function main()

@@ -1,7 +1,7 @@
 * TODO How it works
 1. [X] Generate a random state vector
-2. [ ] Monte Carlo steps for convergence
-3. [ ] Compute known values, like energy or magnetization
+2. [X] Monte Carlo steps for convergence
+3. [X] Compute known values, like energy or magnetization
 4. [ ] Determine the step for decorrelation
 5. [ ] Write RK8 (Dormand-Prince)
 6. [ ] Compute (dynamical) structural factor
