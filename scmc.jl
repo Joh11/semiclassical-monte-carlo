@@ -1,6 +1,7 @@
 using Random
 using LinearAlgebra
 using Plots
+using FFTW
 
 push!(LOAD_PATH, pwd())
 
@@ -114,6 +115,50 @@ function simulate(H, v, dt, ndt)
     end
     
     ret
+end
+
+@doc raw"""Computes the (dynamical) structural factor of the given time
+evolved state v. It is defined as such: 
+``S(\vec Q, t) = <\vec s_{-\vec Q}(0) \vec s_{\vec Q}(t)>``, with
+``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
+e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
+
+Practically, takes a (3, Ns, L, L, ndt) array, and returns a (L, L,
+ndt) array.
+"""
+
+function structuralfactor(H, vs, dt)
+    Ns, L = size(vs)[2:3]
+    ndt = size(vs)[5]
+
+    kxs = 2π / L * (0:L-1)
+    kys = 2π / L * (0:L-1)
+    rs = H.rs
+    
+    sqsublattice = zeros(Complex{Float64}, 3, Ns, L, L, ndt)
+    
+    for s in 1:Ns
+        kr = [dot([kx, ky], rs[:, s]) for kx in kxs, ky in kys]
+        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* reshape(exp(-1im * kr), (1, L, L, 1))
+    end
+
+    sq = reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
+    println(size(sq))
+
+    # now build the structural factor itself
+    # s_-Q(0)
+    smq0 = conj.(sq[:, :, :, 1])
+
+    reshape(sum(reshape(smq0, (3, L, L, 1)) .* sq; dims=1), (L, L, ndt))
+end
+
+@doc raw"""Computes the (dynamical) frequency structural factor
+``S(\vec Q, \omega)`` of the given time evolved state v. """
+function frequencystructuralfactor(H, vs, dt)
+    Sqt = structuralfactor(H, vs, dt)
+    Sqω = fft(Sqt, 4)
+
+    Sqω
 end
 
 # -----------------------------------------------------------------------------
