@@ -2,6 +2,8 @@ using Random
 using LinearAlgebra
 using Plots
 using FFTW
+using Printf
+# using HDF5
 
 push!(LOAD_PATH, pwd())
 
@@ -34,6 +36,7 @@ function mcstep!(H, v, T, niter=1; E=nothing)
     end
     
     for n in 1:niter
+        @printf "E = %f\n" E
         # choose a random spin
         i = rand(1:L)
         j = rand(1:L)
@@ -143,7 +146,6 @@ function structuralfactor(H, vs, dt)
     end
 
     sq = reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
-    println(size(sq))
 
     # now build the structural factor itself
     # s_-Q(0)
@@ -156,9 +158,39 @@ end
 ``S(\vec Q, \omega)`` of the given time evolved state v. """
 function frequencystructuralfactor(H, vs, dt)
     Sqt = structuralfactor(H, vs, dt)
-    Sqω = fft(Sqt, 4)
+    Sqω = fft(Sqt, 3)
 
     Sqω
+end
+
+# -----------------------------------------------------------------------------
+# Plotting stuff
+# -----------------------------------------------------------------------------
+
+function plotfrequencystructuralfactor(Sqω)
+    L, ndt = size(Sqω)[2:3]
+    if L % 2 != 0
+        throw(DomainError("L should be even"))
+    end
+    l = Int(L // 2)
+
+    # build kpath
+    nkps = 3l+3
+    kpath = fill([], 3l+3)
+    kpath[1:l+1] = [[1, 1] .* i for i in 1:l+1] # Γ-M
+    kpath[l+2:2l+2] = [[l+1, l+1] .+ [0, -1] * i for i in 0:l] # M-X
+    kpath[2l+3:3l+3] = [[l+1, 1] .+ [-1, 0] * i for i in 0:l] # X-Γ
+
+    z = zeros(nkps, ndt)
+    for nk in 1:nkps
+        nx, ny = kpath[nk]
+        for nt in 1:ndt
+            z[nk, nt] = abs(Sqω[nx, ny, nt])
+        end
+    end
+    # , ["Γ", "M", "X"]
+    # display(heatmap(transpose(z)), xticks=(1:l+1:nkps))
+    z
 end
 
 # -----------------------------------------------------------------------------
@@ -187,8 +219,8 @@ end
 """Use this function to find which stride to put to have a small
 enough correlation betwen consecutive samples"""
 function findcorrelation()
-    H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
-    L = 5
+    H = loadhamiltonian("hamiltonians/square.dat", [1, 10])
+    L = 20
     T = 1
     N = H.Ns * L^2
     nsamples = 100
@@ -216,35 +248,48 @@ function findcorrelation()
 end
 
 function main()
-    # H = loadhamiltonian("hamiltonians/skl.dat", [1, 0.5, 0.5])
-    H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
-    L = 5
-    T = 1
+    # parameters
+    output = "scmc.h5"
+    system = "hamiltonians/square.dat"
+    J1 = 1
+    J2 = 0
+
+    stride = 20 # between 2 samples
+    thermal = 50 # number of thermalization steps
+    nsamples = 1
+
+    L = 10
+    T = 0.1
+    dt = 0.1
+    nt = 100
+    # end of parameters
+    
+    H = loadhamiltonian(system, [J1, J2])
     N = H.Ns * L^2
-
-    # initial state
-    v = randomstate(H.Ns, L)
-
-    nsamples = 100
 
     E = zeros(nsamples)
     m = zeros(3, nsamples)
+    Sqω = zeros(L, L, nt, nsamples)
 
-    E[1] = energy(H, v)
-    m[:, 1] = magnetization(v)
+    vs = zeros(3, H.Ns, L, L, nt)
+    
+    # initial state
+    v = randomstate(H.Ns, L)
 
     # thermalization
-    E[2] = mcstep!(H, v, T, 1000; E=E[1])
-    m[:, 2] = magnetization(v)
+    println("Doing thermalization")
+    E[1] = mcstep!(H, v, T, thermal)
+    m[:, 1] = magnetization(v)
     
-    for i = 3:nsamples
-        E[i] = mcstep!(H, v, T, 100; E=E[i-1])
+    for i = 2:nsamples
+        @printf "%d / %d" i nsamples
+        E[i] = mcstep!(H, v, T, stride; E=E[i-1])
         m[:, i] = magnetization(v)
-        println(i)
+
+        # time evolution
+        vs = simulate(H, v, dt, nt)
+        Sqω[:, :, :, i] = frequencystructurefactor(H, vs, dt)
     end
 
-    display(plot(E))
-    
-    # return
-    E, m
+    E, m, Sqω, v, H
 end
