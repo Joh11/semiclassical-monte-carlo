@@ -13,9 +13,8 @@ using HamiltonianMod
 function randomstate(Ns, L)
     vec = randn(3, Ns, L, L)
     mapslices(vec, dims=1) do u
-        normalize!(u)
+        normalize(u)
     end
-    vec
 end
 
 "Returns a random unit vector in 3D"
@@ -36,14 +35,14 @@ function mcstep!(H, v, T, niter=1; E=nothing)
     end
     
     for n in 1:niter
-        @printf "E = %f\n" E
+        @printf "E = %f\r" E
         # choose a random spin
         i = rand(1:L)
         j = rand(1:L)
         s = rand(1:Ns)
         # choose a random orientation
         u = randomunitvec()
-        uold = v[:, Ns, L, L]
+        uold = v[:, s, i, j]
         
         # compute new energy
         v[:, s, i, j] = u
@@ -255,11 +254,11 @@ function main()
     J2 = 0
 
     stride = 20 # between 2 samples
-    thermal = 50 # number of thermalization steps
+    thermal = 100 # number of thermalization steps
     nsamples = 1
 
     L = 10
-    T = 0.1
+    T = 0.01
     dt = 0.1
     nt = 100
     # end of parameters

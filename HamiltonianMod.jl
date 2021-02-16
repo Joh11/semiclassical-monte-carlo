@@ -5,7 +5,7 @@ using LinearAlgebra
 export loadparamhamiltonian, loadhamiltonian, localfield, energy
 
 function wrapindex(i, L)
-    1 + (i - 1) % L
+    1 + mod(i - 1, L)
 end
 
 function iscomment(line)
@@ -60,7 +60,7 @@ function loadparamhamiltonian(path)
             # skip comments
             if iscomment(line) continue end
             s1, i, j, s2, c = [parse(Int, x) for x in split(line)]
-            push!(bonds[s1+1], (i+1, j+1, s2+1, c+1))
+            push!(bonds[s1+1], (i, j, s2+1, c+1))
         end
 
         ParamHamiltonian(Ns, bonds, rs)
