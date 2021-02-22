@@ -69,11 +69,11 @@ function correlation(v1, v2)
     sum(v1 .* v2) / length(v1)
 end
 
-"Use an 8th order Runge-Kutta scheme to advance dt in time the given state"
-function dormandprince(H, v, dt)
-    Ns, L = size(v)[2:3]
-    
-    function f(v)
+"Build the function representing the time derivative of v"
+function makef(H)
+    function(v)
+        Ns, L = size(v)[2:3]
+        
         ret = zeros(3, Ns, L, L)
         for s in 1:Ns
             for i in 1:L
@@ -84,7 +84,10 @@ function dormandprince(H, v, dt)
         end
         ret
     end
+end
 
+"Use an 8th order Runge-Kutta scheme to advance dt in time the given state"
+function dormandprince(f, v, dt)
     a21 = 1/5
     a31, a32 = [3/40, 9/40]
     a41, a42, a43 = [44/45, -56/15, 32/9]
@@ -112,8 +115,10 @@ function simulate(H, v, dt, ndt)
     ret = zeros(3, Ns, L, L, ndt)
     ret[:, :, :, :, 1] = v
 
+    f = makef(H)
+    
     for i in 2:ndt
-        ret[:, :, :, :, i] = dormandprince(H, ret[:, :, :, :, i - 1], dt)
+        ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i - 1], dt)
     end
     
     ret
@@ -128,7 +133,6 @@ e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
 Practically, takes a (3, Ns, L, L, ndt) array, and returns a (L, L,
 ndt) array.
 """
-
 function structuralfactor(H, vs, dt)
     Ns, L = size(vs)[2:3]
     ndt = size(vs)[5]
@@ -166,7 +170,7 @@ end
 # Plotting stuff
 # -----------------------------------------------------------------------------
 
-function plotfrequencystructuralfactor(Sqω)
+function plotfrequencystructuralfactor(Sqω; lognorm=true)
     L, ndt = size(Sqω)[2:3]
     if L % 2 != 0
         throw(DomainError("L should be even"))
@@ -189,7 +193,11 @@ function plotfrequencystructuralfactor(Sqω)
     for nk in 1:nkps
         nx, ny = kpath[nk]
         for nt in 1:ndt
-            z[nk, nt] = log10(1e-8 + abs(Sqω[nx, ny, nt]))
+            if lognorm
+                z[nk, nt] = log10(1e-8 + abs(Sqω[nx, ny, nt]))
+            else
+                z[nk, nt] = abs(Sqω[nx, ny, nt])
+            end
         end
     end
     # , ["Γ", "M", "X"]
@@ -263,7 +271,7 @@ function main()
 
     L = 10
     T = 0.1
-    dt = 1
+    dt = 0.1
     nt = 500
     # end of parameters
     
