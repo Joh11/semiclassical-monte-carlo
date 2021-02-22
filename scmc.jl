@@ -3,7 +3,7 @@ using LinearAlgebra
 using Plots
 using FFTW
 using Printf
-# using HDF5
+using Statistics
 
 push!(LOAD_PATH, pwd())
 
@@ -171,8 +171,13 @@ function plotfrequencystructuralfactor(Sqω)
     if L % 2 != 0
         throw(DomainError("L should be even"))
     end
+    
+    # take the mean if necessary
+    if ndims(Sqω) == 4
+        Sqω = reshape(mean(Sqω; dims=4), (L, L, ndt))
+    end
+    
     l = Int(L // 2)
-
     # build kpath
     nkps = 3l+3
     kpath = fill([], 3l+3)
@@ -184,12 +189,11 @@ function plotfrequencystructuralfactor(Sqω)
     for nk in 1:nkps
         nx, ny = kpath[nk]
         for nt in 1:ndt
-            z[nk, nt] = abs(Sqω[nx, ny, nt])
+            z[nk, nt] = log10(1e-8 + abs(Sqω[nx, ny, nt]))
         end
     end
     # , ["Γ", "M", "X"]
-    # display(heatmap(transpose(z)), xticks=(1:l+1:nkps))
-    z
+    heatmap(transpose(z); xticks=([1, 7, 13, 19], ["Γ", "M", "X", "Γ"])), z
 end
 
 # -----------------------------------------------------------------------------
@@ -255,12 +259,12 @@ function main()
 
     stride = 20 # between 2 samples
     thermal = 100 # number of thermalization steps
-    nsamples = 1
+    nsamples = 50
 
     L = 10
-    T = 0.01
-    dt = 0.1
-    nt = 100
+    T = 0.1
+    dt = 1
+    nt = 500
     # end of parameters
     
     H = loadhamiltonian(system, [J1, J2])
@@ -268,7 +272,7 @@ function main()
 
     E = zeros(nsamples)
     m = zeros(3, nsamples)
-    Sqω = zeros(L, L, nt, nsamples)
+    Sqω = zeros(Complex{Float64}, L, L, nt, nsamples)
 
     vs = zeros(3, H.Ns, L, L, nt)
     
@@ -279,15 +283,19 @@ function main()
     println("Doing thermalization")
     E[1] = mcstep!(H, v, T, thermal)
     m[:, 1] = magnetization(v)
+
+    # time evolution
+    vs = simulate(H, v, dt, nt)
+    Sqω[:, :, :, 1] = frequencystructuralfactor(H, vs, dt)
     
     for i = 2:nsamples
-        @printf "%d / %d" i nsamples
+        @printf "%d / %d\n" i nsamples
         E[i] = mcstep!(H, v, T, stride; E=E[i-1])
         m[:, i] = magnetization(v)
 
         # time evolution
         vs = simulate(H, v, dt, nt)
-        Sqω[:, :, :, i] = frequencystructurefactor(H, vs, dt)
+        Sqω[:, :, :, i] = frequencystructuralfactor(H, vs, dt)
     end
 
     E, m, Sqω, v, H
