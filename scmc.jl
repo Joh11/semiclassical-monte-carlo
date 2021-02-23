@@ -267,9 +267,9 @@ function main()
 
     stride = 20 # between 2 samples
     thermal = 100 # number of thermalization steps
-    nsamples = 50
+    nsamples = 10
 
-    L = 10
+    L = 20
     T = 0.1
     dt = 0.1
     nt = 500
@@ -281,6 +281,7 @@ function main()
     E = zeros(nsamples)
     m = zeros(3, nsamples)
     Sqω = zeros(Complex{Float64}, L, L, nt, nsamples)
+    Sqt = zeros(Complex{Float64}, L, L, nt, nsamples)
 
     vs = zeros(3, H.Ns, L, L, nt)
     
@@ -295,6 +296,7 @@ function main()
     # time evolution
     vs = simulate(H, v, dt, nt)
     Sqω[:, :, :, 1] = frequencystructuralfactor(H, vs, dt)
+    Sqt[:, :, :, 1] = structuralfactor(H, vs, dt)
     
     for i = 2:nsamples
         @printf "%d / %d\n" i nsamples
@@ -304,7 +306,8 @@ function main()
         # time evolution
         vs = simulate(H, v, dt, nt)
         Sqω[:, :, :, i] = frequencystructuralfactor(H, vs, dt)
+        Sqt[:, :, :, i] = structuralfactor(H, vs, dt)
     end
-
-    E, m, Sqω, v, H
+    
+    E, m, Sqω, Sqt, v, H
 end
