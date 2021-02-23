@@ -12,43 +12,60 @@ function iscomment(line)
     line == "" || line[1] == '#'
 end
 
+function skipcommentreadline(io)
+    line = ""
+    while iscomment(line)
+        line = readline(io)
+    end
+    line
+end
+
 struct ParamHamiltonian
     # Like Hamiltonian, but the couplings are not replaced yet
     Ns :: Int
     couplings :: Array{Array{Tuple{Int, Int, Int, Int}}}
     rs :: Array{Float64, 2} # shape: (2, Ns)
+    # (lattice[:, 1] is the first lattice vector)
+    lattice :: Array{Float64, 2} # shape: (2, 2)
 end
 
 struct Hamiltonian
     Ns :: Int
     couplings :: Array{Array{Tuple{Int, Int, Int, Float64}}}
     rs :: Array{Float64, 2} # shape: (2, Ns)
+    # (lattice[:, 1] is the first lattice vector)
+    lattice :: Array{Float64, 2} # shape: (2, 2) 
 end
 
+"Build an Hamiltonian from a ParamHamiltonian, and the couplings"
 function mkhamiltonian(paramH, couplings)
     Hamiltonian(paramH.Ns, map(paramH.couplings) do (cs)
                 map(cs) do (i, j, s, c)
                 (i, j, s, couplings[c])
                 end
-                end, paramH.rs)
+                end,
+                paramH.rs,
+                paramH.lattice)
 end
 
+"Load a ParamHamiltonian from the path. "
 function loadparamhamiltonian(path)
     open(path, "r") do io
-        # compute the number of sites
         line = ""
-        while iscomment(line)
-            line = readline(io)
-        end
-        Ns = parse(Int, line)
+
+        # parse the lattice vectors
+        lattice = zeros(2, 2)
+        lattice[:, 1] = [parse(Float64, x) for x in split(skipcommentreadline(io))]
+        lattice[:, 2] = [parse(Float64, x) for x in split(skipcommentreadline(io))]
+        
+        # compute the number of sites
+        Ns = parse(Int, skipcommentreadline(io))
         
         # parse site coordinates
         rs = zeros(2, Ns)
-        
         let n = 1; while n <= Ns
             # skip comments
-            line = readline(io)
-            if iscomment(line) continue end
+            line = skipcommentreadline(io)
             rs[:, n] = [parse(Float64, x) for x in split(line)]
             n += 1
         end end
@@ -63,10 +80,11 @@ function loadparamhamiltonian(path)
             push!(bonds[s1+1], (i, j, s2+1, c+1))
         end
 
-        ParamHamiltonian(Ns, bonds, rs)
+        ParamHamiltonian(Ns, bonds, rs, lattice)
     end
 end
 
+"Load a ParamHamiltonian from the path, and convert it to an Hamiltonian using couplings"
 function loadhamiltonian(path, couplings)
     mkhamiltonian(loadparamhamiltonian(path), couplings)
 end

@@ -1,8 +1,12 @@
 # J1-J2 model on a square lattice
-# format: s1 i j s2 couplingIndex
+# lattice vectors
+1 0
+0 1
+# number of sites per unit cell
 1
 # site coords
 0 0
+# format: s1 i j s2 couplingIndex
 # NN 
 0  1  0 0 0
 0  0  1 0 0

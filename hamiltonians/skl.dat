@@ -1,5 +1,8 @@
 # interactions for the Square Kagome Lattice
-# format: s1 i j s2 couplingIndex
+# lattice vectors
+1 0
+0 1
+# number of sites per unit cell
 6
 # sites coords
 0.25 0.75
@@ -8,6 +11,7 @@
 0.25 0.25
 0.75 0.25
 0.5  0
+# format: s1 i j s2 couplingIndex
 # sublattice 0
 0 0 0 1 0
 0 0 0 3 0
