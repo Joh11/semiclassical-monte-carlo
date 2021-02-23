@@ -1,0 +1,28 @@
+# interactions for the Kagome lattice
+# only NN interaction
+# taken from https://tu-dresden.de/mn/physik/itp/tfp/ressourcen/dateien/teach_folder/lect_folder/ss-2017/fru_mat/ub1.pdf?lang=en
+# lattice vectors
+1 0
+0.5 1.73205080757
+# number of sites per unit cell
+3
+# sites coords
+0 0
+0.5 0
+0 0.5
+# format: s1 i j s2 couplingIndex
+# sublattice 0
+0 0  0 1 0
+0 0  0 2 0
+0 -1 0 1 0
+0 0 -1 2 0
+# sublattice 1
+1 0  0 0 0
+1 0  0 2 0
+1 1  0 0 0
+1 1 -1 2 0
+# sublattice 2
+2 0  0 0 0
+2 0  0 1 0
+2 0  1 0 0
+2 -1 1 1 0
