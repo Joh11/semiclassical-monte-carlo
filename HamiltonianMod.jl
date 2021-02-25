@@ -69,6 +69,8 @@ function loadparamhamiltonian(path)
             rs[:, n] = [parse(Float64, x) for x in split(line)]
             n += 1
         end end
+        # put them in cartesian coords
+        rs = lattice * rs
         
         # now make a NsxNs matrix of arrays
         bonds = fill(Tuple{Int, Int, Int, Int}[], Ns)
