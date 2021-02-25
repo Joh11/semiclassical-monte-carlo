@@ -3,7 +3,7 @@
 # taken from https://tu-dresden.de/mn/physik/itp/tfp/ressourcen/dateien/teach_folder/lect_folder/ss-2017/fru_mat/ub1.pdf?lang=en
 # lattice vectors
 1 0
-0.5 1.73205080757
+0.5 -1.73205080757
 # number of sites per unit cell
 3
 # sites coords
