@@ -2,7 +2,7 @@ module HamiltonianMod
 
 using LinearAlgebra
 
-export loadparamhamiltonian, loadhamiltonian, localfield, energy
+export loadparamhamiltonian, loadhamiltonian, localfield, energy, reciprocallattice
 
 function wrapindex(i, L)
     1 + mod(i - 1, L)
@@ -119,5 +119,21 @@ function energy(H, v)
     E / (H.Ns * L^2)
 end
 
+"Takes a 2x2 matrix (lattice[:, 1] is the first vector) and returns
+the reciprocal lattice. "
+function reciprocallattice(lattice)
+    a1, a2 = lattice[:, 1], lattice[:, 2]
+
+    det = a1[1] * a2[2] - a1[2] * a2[1]
+
+    b1 = [a2[2], -a2[1]]
+    b2 = [-a1[2], a1[1]]
+
+    ret = zeros(2, 2)
+    ret[:, 1] = b1
+    ret[:, 2] = b2
+    
+    (2π / det) * ret
+end
 
 end
