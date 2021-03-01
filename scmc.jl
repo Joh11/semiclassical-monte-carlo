@@ -226,15 +226,15 @@ function reproducefig4()
     output = "kagome-fig4.h5"
     
     T = 0.17
-    L = 20# 144
+    L = 144
     nsamples = 50# 1000
     dt = 0.1
     t = 800
     nt = 80
     skipframes = round(Int, t / dt / nt)
-    stride = 1
+    stride = 15
     
-    thermal = 1 # nothing # TODO
+    thermal = 20
 
     E = 0
     m = zeros(3)
@@ -247,8 +247,9 @@ function reproducefig4()
 
     # thermalization
     println("Doing thermalization")
-    E= mcstep!(H, v, T, thermal)
-    m = magnetization(v)
+    mcstep!(H, v, T, thermal)
+    E = energy(H, v)
+    magnetization(v)
 
     # time evolution
     vs = simulate(H, v, dt, nt; skipframes=skipframes)
@@ -266,8 +267,9 @@ function reproducefig4()
     saveh5(output, 1, E, m, vs, Sqω, Sqt)
     
     for i = 2:nsamples
-        @printf "%d / %d\n" i nsamples
-        E = mcstep!(H, v, T, stride; E=E)
+        println("$i / $nsamples")
+        mcstep!(H, v, T, stride)
+        E = energy(H, v)
         m = magnetization(v)
 
         # time evolution
