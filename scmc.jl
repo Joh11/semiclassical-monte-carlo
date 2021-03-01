@@ -25,18 +25,13 @@ function randomunitvec()
 end
 
 "Does several Monte-Carlo steps, modifying the state vector v inplace"
-function mcstep!(H, v, T, niter=1; E=nothing)
+function mcstep!(H, v, T, niter=1)
     L = size(v)[3]
     Ns = H.Ns
     N = Ns * L^2
     niter *= N
         
-    if isnothing(E)
-        E = energy(H, v)
-    end
-    
     for n in 1:niter
-        print("E = $E\r")
         # choose a random spin
         i = rand(1:L)
         j = rand(1:L)
@@ -45,20 +40,14 @@ function mcstep!(H, v, T, niter=1; E=nothing)
         u = randomunitvec()
         uold = v[:, s, i, j]
         
-        # compute new energy
-        v[:, s, i, j] = u
-        # TODO make it better
-        Enew = energy(H, v)
-        ΔE = Enew - E
+        ΔE = deltaenergy(H, v, u, i, j, s)
         # update spin if accepted
         if ΔE < 0 || rand() < exp(-ΔE / T)
-            E = Enew # accept !
+            v[:, s, i, j] = u
         else
-            # revert to the previous one
-            v[:, s, i, j] = uold
+            # reject (do nothing actually)
         end
     end
-    E
 end
 
 "Computes the magnetization, that is the mean of all spins (thus a 3D vector)"
