@@ -220,36 +220,6 @@ function checkconservation(H, v)
     E, m
 end
 
-"""Use this function to find which stride to put to have a small
-enough correlation betwen consecutive samples"""
-function findcorrelation()
-    H = loadhamiltonian("hamiltonians/square.dat", [1, 10])
-    L = 20
-    T = 1
-    N = H.Ns * L^2
-    nsamples = 100
-
-    # initial state
-    v = randomstate(H.Ns, L)
-    v0 = copy(v)
-
-    # mesurements
-    E = zeros(nsamples)
-    m = zeros(3, nsamples)
-    corr = zeros(nsamples)
-
-    E[1] = energy(H, v)
-    m[:, 1] = magnetization(v)
-    corr[1] = correlation(v0, v)
-
-    for i = 2:nsamples
-        E[i] = mcstep!(H, v, T, 1; E=E[i-1])
-        m[:, i] = magnetization(v)
-        corr[i] = correlation(v0, v)
-        println(i)
-    end
-    E, m, corr
-end
 
 function reproducefig4()
     H = loadhamiltonian("hamiltonians/kagome.dat", [1])

@@ -6,16 +6,17 @@ include("scmc.jl")
 function thermalization(H, L, T)
     v = randomstate(H.Ns, L)
 
-    n = 100
+    n = 50
     stride = 1
     
     E, m = zeros(n), zeros(3, n)
 
+    println("1 / $n")
     E[1] = energy(H, v)
     m[:, 1] = magnetization(v)
     
     for i = 2:n
-        println("$i / $n \n")
+        println("$i / $n")
         mcstep!(H, v, T, stride)
         E[i] = energy(H, v)
         m[:, i] = magnetization(v)
@@ -27,9 +28,38 @@ function thermalization(H, L, T)
     plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
 end
 
-H = loadhamiltonian("hamiltonians/kagome.dat", [1])
-# H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
-thermalization(H, 20, 0.17)
+"Plot the correlation between samples"
+function correlation(H, L, T; thermal=0)
+    n = 25
+    v = randomstate(H.Ns, L)
 
-# plot(E, label = "E", xticks = (1:10, 0:10:100), xlabel="number of MC steps")
-# plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
+    # thermalization
+    if thermal > 0
+        mcstep!(H, v, T, thermal)
+    end
+
+    v0 = copy(v)
+    corr = zeros(n)
+    for i = 1:n
+        println("$i / $n")
+        mcstep!(H, v, T, 1)
+        corr[i] = correlation(v0, v)
+    end
+
+    plot(corr;
+         xlabel="number of MC steps",
+         ylabel="correlation")
+end
+
+# Load the Kagome lattice hamiltonian
+H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+L = 144
+T = 0.17
+
+# 1. check the thermalization step
+# thermalization(H, L, T)
+# we can see that 20 steps is enough
+
+# 2. check the decorrelation steps between two samples
+correlation(H, L, T; thermal=20)
+# we can see that 15 steps is enough
