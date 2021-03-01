@@ -2,7 +2,7 @@ module HamiltonianMod
 
 using LinearAlgebra
 
-export loadparamhamiltonian, loadhamiltonian, localfield, energy, reciprocallattice
+export loadparamhamiltonian, loadhamiltonian, localfield, energy, deltaenergy, reciprocallattice
 
 function wrapindex(i, L)
     1 + mod(i - 1, L)
@@ -117,6 +117,14 @@ function energy(H, v)
     end
 
     E / (H.Ns * L^2)
+end
+
+"Faster way to compute the variation of energy when updating a single spin"
+function deltaenergy(H, v, S, i, j, s)
+    L = size(v)[3]
+    ΔS = S - v[:, s, i, j]
+    # WARNING this only holds for symmetric couplings (Jij = Jji)
+    2 .* ΔS ⋅ localfield(H, v, i, j, s) / (H.Ns * L^2)
 end
 
 "Takes a 2x2 matrix (lattice[:, 1] is the first vector) and returns

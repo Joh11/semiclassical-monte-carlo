@@ -4,6 +4,7 @@ using Plots
 using FFTW
 using Printf
 using Statistics
+using HDF5: h5write
 
 push!(LOAD_PATH, pwd())
 
@@ -35,7 +36,7 @@ function mcstep!(H, v, T, niter=1; E=nothing)
     end
     
     for n in 1:niter
-        @printf "E = %f\r" E
+        print("E = $E\r")
         # choose a random spin
         i = rand(1:L)
         j = rand(1:L)
@@ -110,7 +111,7 @@ end
 
 """Advances the state v in time using the semiclassical
 equations. Returns a (3, Ns, L, L, ndt) vector. """
-function simulate(H, v, dt, ndt)
+function simulate(H, v, dt, ndt; skipframes=1)
     Ns, L = size(v)[2:3]
     ret = zeros(3, Ns, L, L, ndt)
     ret[:, :, :, :, 1] = v
@@ -118,9 +119,12 @@ function simulate(H, v, dt, ndt)
     f = makef(H)
     
     for i in 2:ndt
-        ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i - 1], dt)
+        if i % skipframes == 1 # advance in time
+            ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i - 1], dt)
+        else # do it in place
+            ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i], dt)
+        end
     end
-    
     ret
 end
 
@@ -256,6 +260,63 @@ function findcorrelation()
         println(i)
     end
     E, m, corr
+end
+
+function reproducefig4()
+    H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+    output = "kagome-fig4.h5"
+    
+    T = 0.17
+    L = 20# 144
+    nsamples = 50# 1000
+    dt = 0.1
+    t = 800
+    nt = 80
+    skipframes = round(Int, t / dt / nt)
+    stride = 1
+    
+    thermal = 1 # nothing # TODO
+
+    E = 0
+    m = zeros(3)
+    Sqω = zeros(Complex{Float64}, L, L, nt)
+    Sqt = zeros(Complex{Float64}, L, L, nt)
+    vs = zeros(3, H.Ns, L, L, nt)
+    
+    # initial state
+    v = randomstate(H.Ns, L)
+
+    # thermalization
+    println("Doing thermalization")
+    E= mcstep!(H, v, T, thermal)
+    m = magnetization(v)
+
+    # time evolution
+    vs = simulate(H, v, dt, nt; skipframes=skipframes)
+    Sqω = frequencystructuralfactor(H, vs, dt * skipframes)
+    Sqt = structuralfactor(H, vs, dt * skipframes)
+
+    function saveh5(output, i, E, m, vs, Sqω, Sqt)
+        h5write(output, "$i/E", E)
+        h5write(output, "$i/m", m)
+        h5write(output, "$i/vs", vs)
+        h5write(output, "$i/Sqω", Sqω)
+        h5write(output, "$i/Sqt", Sqt)
+    end
+    
+    saveh5(output, 1, E, m, vs, Sqω, Sqt)
+    
+    for i = 2:nsamples
+        @printf "%d / %d\n" i nsamples
+        E = mcstep!(H, v, T, stride; E=E)
+        m = magnetization(v)
+
+        # time evolution
+        vs = simulate(H, v, dt, nt; skipframes=skipframes)
+        Sqω = frequencystructuralfactor(H, vs, dt * skipframes)
+        Sqt = structuralfactor(H, vs, dt * skipframes)
+        saveh5(output, i, E, m, vs, Sqω, Sqt)
+    end
 end
 
 function main()

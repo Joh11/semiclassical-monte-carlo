@@ -9,3 +9,8 @@
 
 * Data format
 - state vector : =(3, Ns, Nx, Ny)=
+
+* Steps for MC simulations
+1. Figure out the thermalization step using energy and magnetization
+2. Figure out the stride looking at correlation
+3. Run it ?
