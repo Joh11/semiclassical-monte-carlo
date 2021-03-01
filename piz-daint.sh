@@ -8,6 +8,7 @@
 #SBATCH --account s1008
 
 module load daint-gpu
+module load Julia
 module load JuliaExtensions
 
 export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
