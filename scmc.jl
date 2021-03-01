@@ -52,7 +52,7 @@ end
 
 "Computes the magnetization, that is the mean of all spins (thus a 3D vector)"
 function magnetization(v)
-    sum(v; dims=(2, 3, 4)) / length(v) * 3
+    sum(v; dims=(2, 3, 4))
 end
 
 function correlation(v1, v2)

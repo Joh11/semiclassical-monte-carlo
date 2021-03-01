@@ -6,8 +6,8 @@ include("scmc.jl")
 function thermalization(H, L, T)
     v = randomstate(H.Ns, L)
 
-    n = 10
-    stride = 10
+    n = 100
+    stride = 1
     
     E, m = zeros(n), zeros(3, n)
 
@@ -21,13 +21,15 @@ function thermalization(H, L, T)
         m[:, i] = magnetization(v)
     end
 
-    # plot(E, m[1, :], m[2, :], m[3, :])
-    E, m
+    plot(E;
+         label = "E",
+         xlabel="number of MC steps / $stride")
+    plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
 end
 
-# H = loadhamiltonian("hamiltonians/kagome.dat", [1])
-H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
-E, m = thermalization(H, 20, 0.17)
+H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+# H = loadhamiltonian("hamiltonians/square.dat", [1, 0])
+thermalization(H, 20, 0.17)
 
-plot(E, label = "E")
-plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
+# plot(E, label = "E", xticks = (1:10, 0:10:100), xlabel="number of MC steps")
+# plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
