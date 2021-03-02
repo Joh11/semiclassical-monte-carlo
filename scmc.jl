@@ -220,14 +220,15 @@ function checkconservation(H, v)
     E, m
 end
 
-
 function reproducefig4()
     H = loadhamiltonian("hamiltonians/kagome.dat", [1])
     output = "kagome-fig4.h5"
     
     T = 0.17
-    L = 144
-    nsamples = 50# 1000
+    # L = 144
+    L = 10
+    # nsamples = 1000
+    nsamples = 1 # for simple test
     dt = 0.1
     t = 800
     nt = 80
@@ -252,9 +253,13 @@ function reproducefig4()
     magnetization(v)
 
     # time evolution
+    println("$dt $nt $skipframes")
     vs = simulate(H, v, dt, nt; skipframes=skipframes)
+    println("simulate done")
     Sqω = frequencystructuralfactor(H, vs, dt * skipframes)
+    println("Sqt done")
     Sqt = structuralfactor(H, vs, dt * skipframes)
+    println("Sqomega done")
 
     function saveh5(output, i, E, m, vs, Sqω, Sqt)
         h5write(output, "$i/E", E)
@@ -278,58 +283,4 @@ function reproducefig4()
         Sqt = structuralfactor(H, vs, dt * skipframes)
         saveh5(output, i, E, m, vs, Sqω, Sqt)
     end
-end
-
-function main()
-    # parameters
-    output = "scmc.h5"
-    system = "hamiltonians/square.dat"
-    J1 = 1
-    J2 = 0
-
-    stride = 20 # between 2 samples
-    thermal = 100 # number of thermalization steps
-    nsamples = 10
-
-    L = 20
-    T = 0.1
-    dt = 0.1
-    nt = 500
-    # end of parameters
-    
-    H = loadhamiltonian(system, [J1, J2])
-    N = H.Ns * L^2
-
-    E = zeros(nsamples)
-    m = zeros(3, nsamples)
-    Sqω = zeros(Complex{Float64}, L, L, nt, nsamples)
-    Sqt = zeros(Complex{Float64}, L, L, nt, nsamples)
-
-    vs = zeros(3, H.Ns, L, L, nt)
-    
-    # initial state
-    v = randomstate(H.Ns, L)
-
-    # thermalization
-    println("Doing thermalization")
-    E[1] = mcstep!(H, v, T, thermal)
-    m[:, 1] = magnetization(v)
-
-    # time evolution
-    vs = simulate(H, v, dt, nt)
-    Sqω[:, :, :, 1] = frequencystructuralfactor(H, vs, dt)
-    Sqt[:, :, :, 1] = structuralfactor(H, vs, dt)
-    
-    for i = 2:nsamples
-        @printf "%d / %d\n" i nsamples
-        E[i] = mcstep!(H, v, T, stride; E=E[i-1])
-        m[:, i] = magnetization(v)
-
-        # time evolution
-        vs = simulate(H, v, dt, nt)
-        Sqω[:, :, :, i] = frequencystructuralfactor(H, vs, dt)
-        Sqt[:, :, :, i] = structuralfactor(H, vs, dt)
-    end
-    
-    E, m, Sqω, Sqt, v, H
 end

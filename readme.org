@@ -14,3 +14,7 @@
 1. Figure out the thermalization step using energy and magnetization
 2. Figure out the stride looking at correlation
 3. Run it ?
+
+* Reproducing figure 4 from the SCMC paper
+** TODO Fix the "wrong Sq(t)" problem
+*** TODO Simple try with a single sample
