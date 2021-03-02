@@ -4,7 +4,7 @@ using Plots
 using FFTW
 using Printf
 using Statistics
-using HDF5: h5write
+using HDF5: h5write, h5read
 
 push!(LOAD_PATH, pwd())
 
@@ -102,17 +102,18 @@ end
 equations. Returns a (3, Ns, L, L, ndt) vector. """
 function simulate(H, v, dt, ndt; skipframes=1)
     Ns, L = size(v)[2:3]
+    ntotal = ndt * skipframes
+    n = 1
     ret = zeros(3, Ns, L, L, ndt)
-    ret[:, :, :, :, 1] = v
 
     f = makef(H)
-    
-    for i in 2:ndt
-        if i % skipframes == 1 # advance in time
-            ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i - 1], dt)
-        else # do it in place
-            ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i], dt)
+    for i in 1:ntotal
+        if i % skipframes == 1
+            # save it to the ret array
+            ret[:, :, :, :, n] = v
+            n += 1
         end
+        v = dormandprince(f, v, dt)
     end
     ret
 end
