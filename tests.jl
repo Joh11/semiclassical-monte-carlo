@@ -2,7 +2,6 @@ include("scmc.jl")
 
 using Test
 
-
 @testset "random unit vec" begin
     v = randomunitvec()
     @test size(v) == (3,)
@@ -91,4 +90,33 @@ end
     end
 
     @test vs ≈ vs_ana atol=1e-4
+end
+
+@testset "kagome lattice system" begin
+    H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+    
+    T = 0.17
+    L = 30
+    dt = 0.001
+    nt = 100
+    thermal = 20
+
+    # thermalization
+    v = randomstate(H.Ns, L)
+    mcstep!(H, v, T, thermal)
+
+    # simulate
+    vs = simulate(H, v, dt, nt)
+
+    # check energy conservation
+    E0 = energy(H, v)
+    Es = mapslices(vs; dims=[1, 2, 3, 4]) do v
+        energy(H, v)
+    end
+    @test all(Es .≈ E0)
+
+    # check magnetization conservation
+    m0 = magnetization(v)
+    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3, 4]), (3, :))
+    @test all(ms .≈ m0)
 end

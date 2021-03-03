@@ -50,6 +50,18 @@ See the file [[file:checkparams.jl]] for these two steps.
   - For the momentum space => perhaps with other kpoints it's fine
 - Convergence issue ? Unlikely
 
+*** TODO Check energy and magnetization conservation
+They are not conserved !  This was not occuring before, with the two
+spins system. Possibilities:
 
-* Basic checks of the Dormand Prince scheme
-** TODO Two sites analytical comparaison
+- bug in the code for for multiple unit cells
+- the system was not special before (no thermalization), so even if
+  the energy and magnetization moved a bit, it was likely to stay
+  close
+
+#+DOWNLOADED: screenshot @ 2021-03-03 14:44:15
+[[file:imgs/2021-03-03_14-44-15_screenshot.png]]
+
+*** TODO Understand the momentum steps
+
+*** TODO Improve sampling with the time evolution

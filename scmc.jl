@@ -69,7 +69,7 @@ function makef(H)
         for s in 1:Ns
             for i in 1:L
                 for j in 1:L
-                    ret[:, s, i, j] = -cross(v[:, s, i, j], localfield(H, v, i, j, s))
+                    ret[:, s, i, j] = - v[:, s, i, j] × localfield(H, v, i, j, s)
                 end
             end
         end
