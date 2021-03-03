@@ -24,8 +24,8 @@ end
     b1, b2 = rec[:, 1], rec[:, 2]
 
     @test a1⋅b1 ≈ 2π
-    @test isapprox(a1⋅b2, 0; atol=1e-12)
-    @test isapprox(a2⋅b1, 0; atol=1e-12)
+    @test a1⋅b2 ≈ 0 atol=1e-12
+    @test a2⋅b1 ≈ 0 atol=1e-12
     @test a2⋅b2 ≈ 2π
 end
 
@@ -47,4 +47,29 @@ end
     newE = energy(H, v)
 
     @test (newE - E) ≈ ΔE
+end
+
+@testset "two spins system" begin
+    H = loadhamiltonian("hamiltonians/two-spins.dat", [1])
+    v = randomstate(H.Ns, 1)
+
+    dt = 0.1
+    nt = 10
+
+    # run the simulation
+    vs = simulate(H, v, dt, nt)
+    
+    # make sure the magnetization is conserved
+    m0 = v[:, 1, 1, 1] + v[:, 2, 1, 1]
+    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3, 4]), (3, :))
+    @test all(ms .≈ m0)
+    
+    # make sure the energy is conserved
+    E0 = energy(H, v)
+    Es = mapslices(vs; dims=[1, 2, 3, 4]) do v
+        energy(H, v)
+    end
+    @test all(Es .≈ E0)
+
+    # make sure it matches the analytical solution
 end
