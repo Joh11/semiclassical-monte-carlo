@@ -90,6 +90,5 @@ end
         vs_ana[:, 2, 1, 1, n] = m0 - vs_ana[:, 1, 1, 1, n] # s2 = M - s1
     end
 
-    @test vs ≈ vs_ana
-
+    @test vs ≈ vs_ana atol=1e-4
 end
