@@ -2,6 +2,7 @@ include("scmc.jl")
 
 using Test
 
+
 @testset "random unit vec" begin
     v = randomunitvec()
     @test size(v) == (3,)
@@ -54,7 +55,7 @@ end
     v = randomstate(H.Ns, 1)
 
     dt = 0.1
-    nt = 10
+    nt = 1000
 
     # run the simulation
     vs = simulate(H, v, dt, nt)
@@ -72,4 +73,18 @@ end
     @test all(Es .≈ E0)
 
     # make sure it matches the analytical solution
+    m0hat = normalize(m0)
+    ω = norm(m0) # should be J|M|, but here J = 1
+    a = v[:, 1, 1, 1]
+    b = m0hat × v[:, 1, 1, 1]
+    vs_ana = zeros(3, H.Ns, 1, 1, nt)
+    
+    for n = 1:nt # construct the analytical solution
+        t = (n - 1) * dt
+        vs_ana[:, 1, 1, 1, n] = a * cos(ω * t) + b * sin(ω * t) # s1
+        vs_ana[:, 2, 1, 1, n] = m0 - vs_ana[:, 1, 1, 1, n] # s2 = M - s1
+    end
+
+    @test vs ≈ vs_ana
+
 end
