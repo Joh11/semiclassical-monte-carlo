@@ -75,13 +75,18 @@ end
     # make sure it matches the analytical solution
     m0hat = normalize(m0)
     ω = norm(m0) # should be J|M|, but here J = 1
-    a = v[:, 1, 1, 1]
-    b = m0hat × v[:, 1, 1, 1]
+    s0 = v[:, 1, 1, 1] # initial condition for s_1
+    # decompose into parallel and normal to M
+    spar = (s0 ⋅ m0hat) * m0hat
+    snor = s0 - spar
+
+    a = snor
+    b = m0hat × a
     vs_ana = zeros(3, H.Ns, 1, 1, nt)
-    
+
     for n = 1:nt # construct the analytical solution
         t = (n - 1) * dt
-        vs_ana[:, 1, 1, 1, n] = a * cos(ω * t) + b * sin(ω * t) # s1
+        vs_ana[:, 1, 1, 1, n] = spar +  a * cos(ω * t) + b * sin(ω * t) # s1
         vs_ana[:, 2, 1, 1, n] = m0 - vs_ana[:, 1, 1, 1, n] # s2 = M - s1
     end
 
