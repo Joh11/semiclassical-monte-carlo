@@ -93,11 +93,11 @@ end
 
 function localfield(H, v, i, j, s)
     L = size(v)[3]
-    sum(map(H.couplings[s]) do (Δi, Δj, s2, c)
+    sum(H.couplings[s]) do (Δi, Δj, s2, c)
         c * v[:, s2,
               wrapindex(i + Δi, L),
               wrapindex(j + Δj, L)]
-        end)
+    end
 end
 
 "Compute the energy per site of the given state"
