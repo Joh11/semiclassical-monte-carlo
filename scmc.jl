@@ -1,6 +1,7 @@
 using Random
 using LinearAlgebra
-using Plots
+# TODO find why this throws a warning
+# using Plots 
 using FFTW
 using Printf
 using Statistics
@@ -100,21 +101,17 @@ end
 
 """Advances the state v in time using the semiclassical
 equations. Returns a (3, Ns, L, L, ndt) vector. """
-function simulate(H, v, dt, ndt; skipframes=1)
+function simulate(H, v, dt, ndt)
     Ns, L = size(v)[2:3]
-    ntotal = ndt * skipframes
-    n = 1
     ret = zeros(3, Ns, L, L, ndt)
-
+    ret[:, :, :, :, 1] = v
+    
     f = makef(H)
-    for i in 1:ntotal
-        if i % skipframes == 1
-            # save it to the ret array
-            ret[:, :, :, :, n] = v
-            n += 1
-        end
-        v = dormandprince(f, v, dt)
+    for i in 2:ndt
+        print("$i / $ndt\r")
+        ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i-1], dt)
     end
+    println("")
     ret
 end
 
@@ -226,16 +223,11 @@ function reproducefig4()
     output = "kagome-fig4.h5"
     
     T = 0.17
-    # L = 144
-    L = 10
-    # nsamples = 1000
-    nsamples = 1 # for simple test
-    dt = 0.1
-    t = 800
-    nt = 80
-    skipframes = round(Int, t / dt / nt)
+    L = 30
+    nsamples = 1000
+    dt = 0.01
+    nt = 400
     stride = 15
-    
     thermal = 20
 
     E = 0
@@ -251,16 +243,14 @@ function reproducefig4()
     println("Doing thermalization")
     mcstep!(H, v, T, thermal)
     E = energy(H, v)
-    magnetization(v)
+    m = magnetization(v)
 
     # time evolution
-    println("$dt $nt $skipframes")
-    vs = simulate(H, v, dt, nt; skipframes=skipframes)
-    println("simulate done")
-    Sqω = frequencystructuralfactor(H, vs, dt * skipframes)
-    println("Sqt done")
-    Sqt = structuralfactor(H, vs, dt * skipframes)
-    println("Sqomega done")
+    println("Doing simulation")
+    vs = simulate(H, v, dt, nt)
+    println("Computing structural factor")
+    Sqω = frequencystructuralfactor(H, vs, dt)
+    Sqt = structuralfactor(H, vs, dt)
 
     function saveh5(output, i, E, m, vs, Sqω, Sqt)
         h5write(output, "$i/E", E)
@@ -279,9 +269,9 @@ function reproducefig4()
         m = magnetization(v)
 
         # time evolution
-        vs = simulate(H, v, dt, nt; skipframes=skipframes)
-        Sqω = frequencystructuralfactor(H, vs, dt * skipframes)
-        Sqt = structuralfactor(H, vs, dt * skipframes)
+        vs = simulate(H, v, dt, nt)
+        Sqω = frequencystructuralfactor(H, vs, dt)
+        Sqt = structuralfactor(H, vs, dt)
         saveh5(output, i, E, m, vs, Sqω, Sqt)
     end
 end
