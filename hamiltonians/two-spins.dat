@@ -1,0 +1,15 @@
+# A simple two spins system to test
+# Should only be used with a single unit cell
+# lattice vectors
+1 0
+0 1
+# number of sites per unit cell
+2
+# sites coords
+0 0
+0.5 0
+# format: s1 i j s2 couplingIndex
+# sublattice 0
+0 0 0 1 0
+# sublattice 1
+1 0 0 0 0

@@ -52,4 +52,4 @@ See the file [[file:checkparams.jl]] for these two steps.
 
 
 * Basic checks of the Dormand Prince scheme
-* TODO Two sites analytical comparaison
+** TODO Two sites analytical comparaison
