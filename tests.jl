@@ -1,6 +1,7 @@
 include("scmc.jl")
 
 using Test
+using DifferentialEquations
 
 @testset "random unit vec" begin
     v = randomunitvec()
@@ -106,14 +107,19 @@ end
     mcstep!(H, v, T, thermal)
 
     # simulate
-    vs = simulate(H, v, dt, nt)
+    # vs = simulate(H, v, dt, nt)
+    f = makef(H)
+    prob = ODEProblem((u, p, t) -> f(u), v, (0.0, 40))
+    sol = solve(prob)
 
     # check energy conservation
     E0 = energy(H, v)
-    Es = mapslices(vs; dims=[1, 2, 3, 4]) do v
+    Es = map(sol) do v
         energy(H, v)
     end
     @test all(Es .≈ E0)
+    println("E0 = $E0")
+    println("Max of ΔE = $(reduce(max, abs.(Es .- E0)))")
 
     # check magnetization conservation
     m0 = magnetization(v)

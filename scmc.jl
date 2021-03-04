@@ -86,7 +86,7 @@ function dormandprince(f, v, dt)
     a61, a62, a63, a64, a65 = [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656]
     a71, a72, a73, a74, a75, a76 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]
 
-    b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
+    
     
     k1 = f(v)
     k2 = f(v + dt * (a21  * k1))
@@ -96,7 +96,15 @@ function dormandprince(f, v, dt)
     k6 = f(v + dt * (a61  * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5))
     k7 = f(v + dt * (a71  * k1 + a72 * k2 + a73 * k3 + a74 * k4 + a75 * k5 + a76 * k6))
 
-    v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+    # First solution
+    b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
+    ret1 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+
+    # Second solution
+    b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
+    ret2 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+
+    ret1, ret2
 end
 
 """Advances the state v in time using the semiclassical
@@ -109,7 +117,8 @@ function simulate(H, v, dt, ndt)
     f = makef(H)
     for i in 2:ndt
         print("$i / $ndt\r")
-        ret[:, :, :, :, i] = dormandprince(f, ret[:, :, :, :, i-1], dt)
+        s1, s2 = dormandprince(f, ret[:, :, :, :, i-1], dt)
+        ret[:, :, :, :, i] = s1
     end
     println("")
     ret
