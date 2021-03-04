@@ -73,7 +73,7 @@ function loadparamhamiltonian(path)
         rs = lattice * rs
         
         # now make a NsxNs matrix of arrays
-        bonds = fill(Tuple{Int, Int, Int, Int}[], Ns)
+        bonds = [Tuple{Int, Int, Int, Int}[] for i = 1:Ns]
         
         for line in eachline(io)
             # skip comments
