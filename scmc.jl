@@ -143,8 +143,19 @@ function ftspacespins(H, vs, dt)
     sqsublattice = zeros(Complex{Float64}, 3, Ns, L, L, ndt)
     
     for s in 1:Ns
-        kr = [dot([kx, ky], rs[:, s]) for kx in kxs, ky in kys]
-        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* reshape(exp(-1im * kr), (1, L, L, 1))
+        # kr = [dot([kx, ky], rs[:, s]) for kx in kxs, ky in kys]
+        # initialize the phase shift e^(-i k.r)
+        phase_shift = zeros(Complex{Float64}, 3, L, L, ndt)
+        for i in 1:L
+            for j in 1:L
+                kx = kxs[i]
+                ky = kys[j]
+                
+                phase_shift[:, i, j, :] .= exp(-1im * [kx, ky] ⋅ rs[:, s])
+            end
+        end
+        
+        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* phase_shift
     end
 
     reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
