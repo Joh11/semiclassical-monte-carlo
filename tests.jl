@@ -30,6 +30,32 @@ end
     @test a2⋅b2 ≈ 2π
 end
 
+@testset "loading hamiltonians" begin
+    function inverse_coupling(s1, coupling)
+        (i, j, s2, J) = coupling
+        s2, (-i, -j, s1, J)
+    end
+
+    "Make sure Jij = Jji"
+    function check_symmetryp(H)
+        for s1 = 1:H.Ns
+            for coupling in H.couplings[s1]
+                s2, inv_coupling = inverse_coupling(s1, coupling)
+                x = findfirst(x -> x == inv_coupling, H.couplings[s2])
+                if isnothing(x)
+                    println("no inverse coupling for s1 = $s1, coupling = $coupling")
+                    println("excepted: $s2, $inv_coupling")
+                    return false
+                end
+            end
+        end
+        true
+    end
+
+    H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+    @test check_symmetryp(H)
+end
+
 @testset "delta energy" begin
     L = 144
     H = loadhamiltonian("hamiltonians/square.dat", [1, 2])
