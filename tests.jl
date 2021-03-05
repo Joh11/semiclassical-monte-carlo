@@ -148,4 +148,8 @@ end
     m0 = magnetization(v)
     ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3, 4]), (3, :))
     @test all(ms .≈ m0)
+
+    # check FT of spins
+    sq = ftspacespins(H, vs, dt)
+    @test all(sq[:, 1, 1, :] .≈ m0)
 end
