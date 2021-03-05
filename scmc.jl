@@ -124,6 +124,32 @@ function simulate(H, v, dt, ndt)
     ret
 end
 
+@doc raw"""Computes the space FT of the given time
+evolved state v. It is defined as such: 
+``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
+e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
+
+Practically, takes a (3, Ns, L, L, ndt) array, and returns a (3, L, L,
+ndt) array.  
+"""
+function ftspacespins(H, vs, dt)
+    Ns, L = size(vs)[2:3]
+    ndt = size(vs)[5]
+
+    kxs = 2π / L * (0:L-1)
+    kys = 2π / L * (0:L-1)
+    rs = H.rs
+    
+    sqsublattice = zeros(Complex{Float64}, 3, Ns, L, L, ndt)
+    
+    for s in 1:Ns
+        kr = [dot([kx, ky], rs[:, s]) for kx in kxs, ky in kys]
+        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* reshape(exp(-1im * kr), (1, L, L, 1))
+    end
+
+    reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
+end
+
 @doc raw"""Computes the (dynamical) structural factor of the given time
 evolved state v. It is defined as such: 
 ``S(\vec Q, t) = <\vec s_{-\vec Q}(0) \vec s_{\vec Q}(t)>``, with
