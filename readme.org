@@ -87,6 +87,12 @@ spins system. Possibilities:
 #+DOWNLOADED: screenshot @ 2021-03-04 12:00:33
 [[file:imgs/2021-03-04_12-00-33_screenshot.png]]
 
-*** TODO Understand the momentum steps
+It is finally working ! I was making shallow copies of the couplings
+in the hamiltonian ...
+
+
+#+DOWNLOADED: screenshot @ 2021-03-04 17:31:43
+[[file:imgs/2021-03-04_17-31-43_screenshot.png]]
+
 
 *** TODO Improve sampling with the time evolution

@@ -133,14 +133,11 @@ end
     mcstep!(H, v, T, thermal)
 
     # simulate
-    # vs = simulate(H, v, dt, nt)
-    f = makef(H)
-    prob = ODEProblem((u, p, t) -> f(u), v, (0.0, 40))
-    sol = solve(prob)
+    vs = simulate(H, v, dt, nt)
 
     # check energy conservation
     E0 = energy(H, v)
-    Es = map(sol) do v
+    Es = mapslices(vs, dims=[1, 2, 3, 4]) do v
         energy(H, v)
     end
     @test all(Es .≈ E0)
