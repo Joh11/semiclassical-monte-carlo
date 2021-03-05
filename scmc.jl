@@ -174,18 +174,7 @@ function structuralfactor(H, vs, dt)
     Ns, L = size(vs)[2:3]
     ndt = size(vs)[5]
 
-    kxs = 2π / L * (0:L-1)
-    kys = 2π / L * (0:L-1)
-    rs = H.rs
-    
-    sqsublattice = zeros(Complex{Float64}, 3, Ns, L, L, ndt)
-    
-    for s in 1:Ns
-        kr = [dot([kx, ky], rs[:, s]) for kx in kxs, ky in kys]
-        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* reshape(exp(-1im * kr), (1, L, L, 1))
-    end
-
-    sq = reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
+    sq = ftspacespins(H, vs, dt)
 
     # now build the structural factor itself
     # s_-Q(0)
