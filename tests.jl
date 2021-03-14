@@ -96,7 +96,7 @@ end
     Es = mapslices(vs; dims=[1, 2, 3, 4]) do v
         energy(H, v)
     end
-    @test all(Es .≈ E0)
+    @test reduce(max, Es .- E0) ≈ 0 atol=1e-5
 
     # make sure it matches the analytical solution
     m0hat = normalize(m0)
