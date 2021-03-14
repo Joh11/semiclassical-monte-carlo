@@ -255,12 +255,12 @@ end
 
 function reproducefig4()
     H = loadhamiltonian("hamiltonians/kagome.dat", [1])
-    output = "kagome-fig4.h5"
+    output = "kagome-fig4-t40.h5"
     
-    T = 0.17
+    T = 10
     L = 30
     nsamples = 1000
-    dt = 0.01
+    dt = 0.1
     nt = 400
     stride = 15
     thermal = 20
@@ -310,3 +310,5 @@ function reproducefig4()
         saveh5(output, i, E, m, vs, Sqω, Sqt)
     end
 end
+
+# reproducefig4()
