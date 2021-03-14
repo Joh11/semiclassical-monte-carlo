@@ -7,7 +7,7 @@
 - [[file:solve-rk8.jl]]: used to plot the (non)conservation of energy and
   M with time
   
-* TODO How it works
+* How it works
 1. [X] Generate a random state vector
 2. [X] Monte Carlo steps for convergence
 3. [X] Compute known values, like energy or magnetization
@@ -30,22 +30,16 @@ See the file [[file:checkparams.jl]] for these two steps.
 ** Target figures
 
 ** TODO Fix the wrong \(S\vec q(t)\) problem
-*** TODO Simple try with a single sample
-
+*** Simple try with a single sample
 #+DOWNLOADED: screenshot @ 2021-03-02 19:51:18
 #+CAPTION: Figure 4 from the paper
 [[file:imgs/2021-03-02_19-51-18_screenshot.png]]
-
-    
 #+DOWNLOADED: screenshot @ 2021-03-02 17:16:17
 #+CAPTION: Only the first sample
 [[file:imgs/2021-03-02_17-16-17_screenshot.png]]
-
 #+DOWNLOADED: screenshot @ 2021-03-02 17:17:23
 #+CAPTION: 74 samples
 [[file:imgs/2021-03-02_17-17-23_screenshot.png]]
-
-
 #+DOWNLOADED: screenshot @ 2021-03-02 19:44:50
 #+CAPTION: 403 samples
 [[file:imgs/2021-03-02_19-44-50_screenshot.png]]
@@ -57,7 +51,7 @@ See the file [[file:checkparams.jl]] for these two steps.
   - For the momentum space => perhaps with other kpoints it's fine
 - Convergence issue ? Unlikely
 
-*** WAIT Check energy and magnetization conservation
+*** Check energy and magnetization conservation
 They are not conserved !  This was not occuring before, with the two
 spins system. Possibilities:
 
@@ -69,7 +63,7 @@ spins system. Possibilities:
 #+DOWNLOADED: screenshot @ 2021-03-03 14:44:15
 [[file:imgs/2021-03-03_14-44-15_screenshot.png]]
 
-*** TODO Plotting the energy / magnetization non conservation as a function of the time step
+*** Plotting the energy / magnetization non conservation as a function of the time step
 #+begin_src julia
   T = 0.17
   L = 20
@@ -79,10 +73,8 @@ spins system. Possibilities:
   dts = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0001]
 #+end_src
 
-
 #+DOWNLOADED: screenshot @ 2021-03-04 08:51:18
 [[file:imgs/2021-03-04_08-51-18_screenshot.png]]
-
 
 #+DOWNLOADED: screenshot @ 2021-03-04 12:00:33
 [[file:imgs/2021-03-04_12-00-33_screenshot.png]]
@@ -90,9 +82,15 @@ spins system. Possibilities:
 It is finally working ! I was making shallow copies of the couplings
 in the hamiltonian ...
 
-
 #+DOWNLOADED: screenshot @ 2021-03-04 17:31:43
 [[file:imgs/2021-03-04_17-31-43_screenshot.png]]
 
+*** Improve sampling with the time evolution
+#+DOWNLOADED: screenshot @ 2021-03-05 16:29:52
+[[file:Reproducing_figure_4_from_the_SCMC_paper/2021-03-05_16-29-52_screenshot.png]]
+*** TODO Unit tests for Sqt
+- solve the issue of the (sometimes) failing tests !
 
-*** TODO Improve sampling with the time evolution
+For the two spins problem:
+- compute the structure factor for a uniform distribution of the spins
+- compute the structure factor for the Boltzmann distribution
