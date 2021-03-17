@@ -94,3 +94,11 @@ in the hamiltonian ...
 For the two spins problem:
 - compute the structure factor for a uniform distribution of the spins
 - compute the structure factor for the Boltzmann distribution
+
+It is not this simple ... The structure factor can only be computed on
+grid points in k space, yet given this is a single unit cell system,
+only the Gamma point can be reached. I tried putting L² copies of the
+same system, yet this is not working (due to the phase shift in R.q).
+
+My analytical solution is wrong ! Because the frequency \(\omega =
+J|M|\) needs to be averaged.

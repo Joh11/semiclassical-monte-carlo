@@ -119,6 +119,77 @@ end
     @test vs ≈ vs_ana atol=1e-4
 end
 
+@testset "two spins system - structure factor" begin
+    H = loadhamiltonian("hamiltonians/two-spins.dat", [1])
+
+    # first look at it for the uniform distribution (no MC step)
+    nsamples = 400
+    L = 2
+    dt = 0.1
+    nt = 100
+    N = L^2
+
+    function runone(n)
+        v = randomstate(H.Ns, L)
+        simulate(H, v, dt, nt)
+
+        # return Sqt
+        # structuralfactor(H, vs, dt)
+    end
+
+    samples = map(runone, 1:nsamples)
+    
+    # 1. check that the decaying term decays
+    decay = mapreduce(+, samples) do vs
+        v = vs[:, :, :, :, 1]
+        s1, s2 = v[:, 1, 1, 1], v[:, 2, 1, 1]
+        M = s1 + s2
+        normM = norm(M)
+        Mhat = M / normM
+        sperp = s1 - dot(s1, Mhat) * Mhat
+        
+        reshape(mapslices(s -> dot(sperp, s), vs[:, 1, 1, 1, :]; dims=[1]), :)
+    end
+    decay /= nsamples
+    # plot(decay)
+    # pretty high tolerance because this is random
+    @test decay[1] ≈ 1/2 atol=3e-2
+    @test decay[end] ≈ 0 atol=3e-2
+    
+    # 2. check the structure factor
+    Sqt = mapreduce(vs -> structuralfactor(H, vs, dt), +, samples)
+    Sqt /= nsamples
+
+    # nsamples | max(imag.(Sqt[2, 1, :]))
+    # 100      | 0.47
+    # 200      | 0.42
+    # 400      | 0.25
+    # 600      | 0.13
+    # 800      | 0.15
+    # 1000     | 0.13
+    # 2000     | 0.06
+    # this is a lame atol but it is slowly vanishing...
+    @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=0.02
+    
+    # plot(real.(Sqt[2, 1, :]), label="Sqt")
+    # plot!(2N * (decay .+ 0.5), label="Sqt from the decaying term")
+    @test decay ≈ (real.(Sqt[2, 1, :]) / 2N .- 1/2) atol=0.5
+
+    # now compare with the analytical solution
+    norm_Sqt = real.(Sqt[:, :, end] ./ Sqt[:, :, 1])
+
+    norm_Sqt_ana = zeros(L, L)
+    r2 = H.rs[:, 2]
+    for nx = 1:L
+        for ny = 1:L
+            q = 2π * [nx-1, ny-1] / L
+            norm_Sqt_ana[nx, ny] = 1/2 * (1 + cos(dot(q, r2)))
+        end
+    end
+
+    @test norm_Sqt ≈ norm_Sqt_ana atol=5e-2
+end
+
 @testset "kagome lattice system" begin
     H = loadhamiltonian("hamiltonians/kagome.dat", [1])
     
