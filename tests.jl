@@ -119,6 +119,20 @@ end
     @test vs ≈ vs_ana atol=1e-4
 end
 
+function compute_norm_Sqt_ana(H, L)
+    norm_Sqt_ana = zeros(L, L)
+
+    r2 = H.rs[:, 2]
+    for nx = 1:L
+        for ny = 1:L
+            q = 2π * [nx-1, ny-1] / L
+            norm_Sqt_ana[nx, ny] = 1/2 * (1 + cos(dot(q, r2)))
+        end
+    end
+
+    norm_Sqt_ana
+end
+
 @testset "two spins system - structure factor" begin
     H = loadhamiltonian("hamiltonians/two-spins.dat", [1])
 
@@ -132,9 +146,6 @@ end
     function runone(n)
         v = randomstate(H.Ns, L)
         simulate(H, v, dt, nt)
-
-        # return Sqt
-        # structuralfactor(H, vs, dt)
     end
 
     samples = map(runone, 1:nsamples)
@@ -178,16 +189,38 @@ end
     # now compare with the analytical solution
     norm_Sqt = real.(Sqt[:, :, end] ./ Sqt[:, :, 1])
 
-    norm_Sqt_ana = zeros(L, L)
-    r2 = H.rs[:, 2]
-    for nx = 1:L
-        for ny = 1:L
-            q = 2π * [nx-1, ny-1] / L
-            norm_Sqt_ana[nx, ny] = 1/2 * (1 + cos(dot(q, r2)))
-        end
-    end
+    norm_Sqt_ana = compute_norm_Sqt_ana(H, L)
 
     @test norm_Sqt ≈ norm_Sqt_ana atol=5e-2
+end
+
+@testset "two spins system - structure factor, high L" begin
+    H = loadhamiltonian("hamiltonians/two-spins.dat", [1])
+    
+    nsamples = 100
+    L = 20
+    dt = 0.1
+    nt = 100
+    N = L^2
+
+    function runone(n)
+        v = randomstate(H.Ns, L)
+        simulate(H, v, dt, nt)
+    end
+    samples = map(runone, 1:nsamples)
+
+    Sqts = map(vs -> structuralfactor(H, vs, dt), samples)
+
+    norm_Sqt_ana = compute_norm_Sqt_ana(H, L)
+
+    ncuterr = map([10, 30, 60, 100]) do ncut
+        Sqt = mean(Sqts[1:ncut])
+        norm_Sqt = real.(Sqt[:, :, end] ./ Sqt[:, :, 1])
+        norm(norm_Sqt - norm_Sqt_ana) / L^2
+    end
+
+    @test all(diff(ncuterr) .< 0) # decreasing error
+    @test ncuterr[end] < 1e-2
 end
 
 @testset "kagome lattice system" begin
