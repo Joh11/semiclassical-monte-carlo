@@ -180,7 +180,7 @@ end
     # 1000     | 0.13
     # 2000     | 0.06
     # this is a lame atol but it is slowly vanishing...
-    @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=0.02
+    @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=0.03
     
     # plot(real.(Sqt[2, 1, :]), label="Sqt")
     # plot!(2N * (decay .+ 0.5), label="Sqt from the decaying term")
