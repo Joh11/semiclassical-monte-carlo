@@ -109,18 +109,21 @@ end
 
 """Advances the state v in time using the semiclassical
 equations. Returns a (3, Ns, L, L, ndt) vector. """
-function simulate(H, v, dt, ndt)
+function simulate(H, v, dt, ndt; stride=1)
     Ns, L = size(v)[2:3]
     ret = zeros(3, Ns, L, L, ndt)
     ret[:, :, :, :, 1] = v
-    
+
     f = makef(H)
-    for i in 2:ndt
-        # print("$i / $ndt\r")
-        s1, s2 = dormandprince(f, ret[:, :, :, :, i-1], dt)
-        ret[:, :, :, :, i] = s1
+    for i in 1:ndt-1
+        println("$i / $ndt")
+        ret[:, :, :, :, i] = v
+        for n = 1:stride
+            v, s2 = dormandprince(f, v, dt)
+        end
     end
-    # println("")
+    ret[:, :, :, :, end] = v
+    
     ret
 end
 
