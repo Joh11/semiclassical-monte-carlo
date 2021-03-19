@@ -119,3 +119,8 @@ See the file [[file:fig4.jl]].
 - Start with small number of samples
 - Pick a good L
 - Converge in # of samples
+
+** First results
+The 4 kpoints I choose lead to trivial factors (constant). Is it to be
+expected ? I did not set correctly the "pi" kpoints ! I should take
+\(1 + L / 2\) instead of \(L - 1\).

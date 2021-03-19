@@ -6,15 +6,15 @@ using HDF5: h5write
 
 @show nthreads()
 
-# Ls = [1, 20, 50, 100]
-Ls = [1, 20]
-nL = length(Ls)
-T = 1
-dt = 0.1
-nt = 1000
-thermal = 20
-nsamples = 10# 0
-stride = 15
+# const Ls = [1, 20, 50, 100]
+const Ls = [1, 20]
+const nL = length(Ls)
+const T = 1
+const dt = 0.1
+const nt = 1000
+const thermal = 20
+const nsamples = 10# 0
+const stride = 15
 
 H = loadhamiltonian("hamiltonians/kagome.dat", [1])
 
@@ -24,12 +24,13 @@ S0pi = zeros(Complex{Float64}, nt, nL)
 Spi0 = zeros(Complex{Float64}, nt, nL)
 
 function runsim(v, i, n)
+    npi = 1 + round(Int, Ls[i] / 2)
     vs = simulate(H, v, dt, nt)
     Sqt = structuralfactor(H, vs, dt)
     global S00[:, i] += Sqt[1, 1, :] / Sqt[1, 1, 1]
-    global Spipi[:, i] += Sqt[end, end, :] / Sqt[end, end, 1]
-    global Spi0[:, i] += Sqt[end, 1, :] / Sqt[end, 1, 1]
-    global S0pi[:, i] += Sqt[1, end, :] / Sqt[1, end, 1]
+    global Spipi[:, i] += Sqt[npi, npi, :] / Sqt[npi, npi, 1]
+    global Spi0[:, i] += Sqt[npi, 1, :] / Sqt[npi, 1, 1]
+    global S0pi[:, i] += Sqt[1, npi, :] / Sqt[1, npi, 1]
     println("Done simulating the $n th iL=$i in thread $(threadid())")
 end
 
