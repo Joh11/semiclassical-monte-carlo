@@ -124,3 +124,5 @@ See the file [[file:fig4.jl]].
 The 4 kpoints I choose lead to trivial factors (constant). Is it to be
 expected ? I did not set correctly the "pi" kpoints ! I should take
 \(1 + L / 2\) instead of \(L - 1\).
+
+\(t = 100\) is too large, I can easily do 10x less. 

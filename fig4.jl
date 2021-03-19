@@ -2,18 +2,19 @@ include("scmc.jl")
 using Plots
 using Base.Threads: @spawn, threadid, nthreads
 using LaTeXStrings
-using HDF5: h5write
+using HDF5: h5write, h5open, attributes
 
 @show nthreads()
 
 # const Ls = [1, 20, 50, 100]
-const Ls = [1, 20]
+const Ls = [2, 20]
 const nL = length(Ls)
 const T = 1
 const dt = 0.1
-const nt = 1000
+const nt = 100
+const ts = dt * (0:nt-1)
 const thermal = 20
-const nsamples = 10# 0
+const nsamples = 500
 const stride = 15
 
 H = loadhamiltonian("hamiltonians/kagome.dat", [1])
@@ -59,18 +60,30 @@ Spipi /= nsamples
 S0pi /= nsamples
 Spi0 /= nsamples
 
-function plotSqt(Sqt, Ls; title="Sqt")
-    nL = size(Ls)
-    plot()
+function plotSqt(Sqt; title="Sqt")
+    display(plot())
+    ylims!(-0.1, 1.1)
+    title!(title)
+    
     for i = 1:nL
         L = Ls[i]
-        plot!(real.(Sqt[:, i]), label="L=$L")
+        display(plot!(ts, real.(Sqt[:, i]), label="L=$L"))
     end
 end
 
 output = "fig4.h5"
-h5write(output, "S00", S00)
-h5write(output, "Spipi", Spipi)
-h5write(output, "S0pi", S0pi)
-h5write(output, "Spi0", Spi0)
+h5open(output, "w") do f
+    attributes(f)["Ls"] = Ls
+    attributes(f)["T"] = T
+    attributes(f)["dt"] = dt
+    attributes(f)["nt"] = nt
+    attributes(f)["thermal"] = thermal
+    attributes(f)["nsamples"] = nsamples
+    attributes(f)["stride"] = stride
+    
+    write(f, "S00", S00)
+    write(f, "Spipi", Spipi)
+    write(f, "S0pi", S0pi)
+    write(f, "Spi0", Spi0)
+end
 # plot(S00, Ls; title=L"S_{\vec 0}(t) / S_{\vec 0}(0)")
