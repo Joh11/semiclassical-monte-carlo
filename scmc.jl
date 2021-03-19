@@ -116,11 +116,11 @@ function simulate(H, v, dt, ndt)
     
     f = makef(H)
     for i in 2:ndt
-        print("$i / $ndt\r")
+        # print("$i / $ndt\r")
         s1, s2 = dormandprince(f, ret[:, :, :, :, i-1], dt)
         ret[:, :, :, :, i] = s1
     end
-    println("")
+    # println("")
     ret
 end
 

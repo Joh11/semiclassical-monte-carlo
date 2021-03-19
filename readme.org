@@ -116,3 +116,6 @@ Take some fixed k points always there:
 See how does \(S_q(t) / S_q(0)\) evolves as L gets bigger.
 
 See the file [[file:fig4.jl]]. 
+- Start with small number of samples
+- Pick a good L
+- Converge in # of samples
