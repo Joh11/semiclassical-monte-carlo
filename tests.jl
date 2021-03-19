@@ -137,9 +137,9 @@ end
     H = loadhamiltonian("hamiltonians/two-spins.dat", [1])
 
     # first look at it for the uniform distribution (no MC step)
-    nsamples = 400
+    nsamples = 800
     L = 2
-    dt = 0.1
+    dt = 0.05
     nt = 100
     N = L^2
 
@@ -182,8 +182,8 @@ end
     # this is a lame atol but it is slowly vanishing...
     @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=0.03
     
-    # plot(real.(Sqt[2, 1, :]), label="Sqt")
-    # plot!(2N * (decay .+ 0.5), label="Sqt from the decaying term")
+    plot(real.(Sqt[2, 1, :]), label="Sqt")
+    plot!(2N * (decay .+ 0.5), label="Sqt from the decaying term")
     @test decay ≈ (real.(Sqt[2, 1, :]) / 2N .- 1/2) atol=0.5
 
     # now compare with the analytical solution

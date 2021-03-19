@@ -88,7 +88,7 @@ in the hamiltonian ...
 *** Improve sampling with the time evolution
 #+DOWNLOADED: screenshot @ 2021-03-05 16:29:52
 [[file:Reproducing_figure_4_from_the_SCMC_paper/2021-03-05_16-29-52_screenshot.png]]
-*** TODO Unit tests for Sqt
+*** Unit tests for Sqt
 - solve the issue of the (sometimes) failing tests !
 
 For the two spins problem:
@@ -102,3 +102,17 @@ same system, yet this is not working (due to the phase shift in R.q).
 
 My analytical solution is wrong ! Because the frequency \(\omega =
 J|M|\) needs to be averaged.
+
+<2021-03-19 ven.>: I think now that my implementation is correct (see
+the unit tests).
+
+** TODO See how Sqt / Sq0 evolves
+Take some fixed k points always there:
+- (0, 0)
+- (pi, pi)
+- (0, pi)
+- (pi, 0)
+
+See how does \(S_q(t) / S_q(0)\) evolves as L gets bigger.
+
+See the file [[file:fig4.jl]]. 

@@ -1,0 +1,212 @@
+#+setupfile: "~/.emacs.d/templates/feynman.org"
+
+#+title: Dynamical structure factor for two spins
+
+* Definition
+We have two classical spins (\(\vec s_1, \vec s_2 \in \R^3\),
+\(|s_i|^2 = 1\)), spaced out by a distance \(L\). The semiclassical
+time evolution is given by:
+
+\begin{equation}
+\begin{cases}
+\diff{\vec s_1}{t} &= -J \vec s_1 \times \vec s_2 \\
+\diff{\vec s_2}{t} &= -J \vec s_2 \times \vec s_1
+\end{cases}
+\end{equation}
+
+The goal is to compute the *dynamical structure factor*, that is:
+\begin{equation}
+S(Q, t) = \langle s_{-Q}(0) \cdot s_{Q}(t) \rangle
+\end{equation},
+defining \(\vec s_Q(t) = \vec s_1(t) + \vec s_2(t) e^{-i QL}\).
+
+* Solution for the equations of motion
+We can see that the magnetization \(\vec M := \vec s_1 + \vec s_2\) is
+conserved. Thus, replacing \(\vec s_2 = \vec M - \vec s_1\) in the
+first equation, we get:
+\begin{equation}
+  \diff{\vec s_1}{t} = -J \vec s_1 \times (\vec M - \vec s_1)
+  = -J \vec s_1 \times \vec M
+\end{equation}
+
+This can be solved, projecting \(\vec s_1\) onto \(\vec M\):
+\begin{equation}
+  \vec s_1 =
+  (\vec s_1 \cdot \hv M) \hv M + \left(\vec s_1 - (\vec s_1 \cdot \hv M) \hv M\right)
+  := \vec s_\parallel + \vec s_\perp
+\end{equation}
+
+yielding the following equations:
+\begin{equation}
+\begin{cases}
+  \diff{\vec s_\parallel}{t} &= \vec 0 \\
+  \diff{\vec s_\perp}{t} &= -J \vec s_\perp \times \vec M
+\end{cases}
+\end{equation}
+
+which can be solved exactly, with \(\omega := J |M|\), and \(\hv M =
+\vec M / |M|\):
+\begin{equation}
+\begin{cases}
+  \vec s_\parallel(t) &= \vec s_\parallel(0) \\
+  \vec s_\perp(t) &= \cos(\omega t) \vec s_\perp(0) + \sin(\omega t) \hv M \times \vec s_\perp(0)
+\end{cases}
+\end{equation}
+
+* Computing the dynamical structure factor
+For readability, \((0)\) is dropped. 
+\begin{equation}
+  \begin{align}
+  S(Q, t) &= \langle \vec s_{-Q} \cdot \vec s_Q(t) \rangle \\
+  &= \langle \vec s_1 \cdot \vec s_1(t) \rangle
+  + \langle \vec s_2 \cdot \vec s_2(t) \rangle
+  + \langle \vec s_2 \cdot \vec s_1(t) \rangle e^{iQL}
+  + \langle \vec s_2 \cdot \vec s_1(t) \rangle e^{-iQL} \\
+  &= 2\left( \langle \vec s_1 \cdot \vec s_1(t) \rangle
+  + \cos(QL) \langle \vec s_2 \cdot \vec s_1(t) \rangle \right)
+  \end{align}
+\end{equation}
+The last line is obtained as the system is left unchanged under the
+inversion \(\vec s_1 \leftrightarrow \vec s_2\).
+
+Both terms can be evaluated separately:
+\begin{equation}
+  \begin{align}
+    \langle \vec s_1 \cdot \vec s_1(t) \rangle &=
+    \langle (\vec s_\parallel + \vec s_\perp)
+    \cdot (\vec s_\parallel + \vec s_\perp \cos(\omega t)
+    + \hv M \times \vec s_\perp \sin(\omega t)) \rangle \\
+    &= \langle \vec s_\parallel^2 + \vec s_\perp^2 \cos(\omega t) \rangle \\
+    \langle \vec s_2 \cdot \vec s_1(t) \rangle &=
+    \langle \vec M \cdot \vec s_1(t) \rangle
+    - \langle \vec s_1 \cdot \vec s_1(t) \rangle \\
+    &= \langle \vec M \cdot \vec s_\parallel \rangle
+    - \langle \vec s_\parallel^2 + \vec s_\perp^2 \cos(\omega t) \rangle \\
+  \end{align}
+\end{equation}
+
+** Average integrals
+Without loss of generality, one can assume that \(\vec s_1 = \hv
+z\). We can use a spherical coordinates parameterization:
+\begin{equation}
+  \langle \dots \rangle = \frac{1}{4\pi} \int_0^\pi \dd \theta \int_0^{2\pi} \dd \phi \dots
+\end{equation}
+In these coordinates, \(\vec s_2\) and \(\vec M\) are written as:
+\begin{equation}
+\vec s_2 = 
+\begin{pmatrix}
+  \sin\theta \cos\phi \\
+  \sin\theta \sin\phi \\
+  \cos\theta \\
+\end{pmatrix},\
+\vec M = 
+\begin{pmatrix}
+  \sin\theta \cos\phi \\
+  \sin\theta \sin\phi \\
+  1 + \cos\theta \\
+\end{pmatrix}
+\end{equation}
+One can see that
+\begin{equation}
+  \langle M^2 \rangle = \langle (1 + \cos\theta)^2 + \sin\theta^2 \rangle
+  = 2 \langle 1 + \cos\theta \rangle = 2
+\end{equation}
+Thus:
+\begin{equation}
+  \begin{align}
+    \langle \vec M \cdot \vec s_\parallel \rangle
+    &= \langle \frac{(\hv z \cdot \vec M)}{M^2} \vec M \cdot \vec M \rangle \\
+    &= \langle \frac{1 + \cos\theta}{M^2} M^2 \rangle \\
+    &= \langle 1 + \cos \theta \rangle \\
+    &= 1
+  \end{align}
+\end{equation}
+\begin{equation}
+  \begin{align}
+    \langle \vec s_\parallel \cdot \vec s_\parallel \rangle
+    &= \langle \frac{(\hv z \cdot \vec M)}{M^2} \vec M \cdot \frac{(\hv z \cdot \vec M)}{M^2} \vec M \rangle \\
+    &= \langle \frac{(1 + \cos\theta)^2}{M^4} M^2 \rangle \\
+    &= \langle \frac{(1 + \cos\theta)^2}{2(1 + \cos\theta)} \rangle \\
+    &= \frac12 \langle 1 + \cos\theta \rangle = \frac12
+  \end{align}
+\end{equation}
+\begin{equation}
+  \begin{align}
+    \langle \vec s_\perp \cdot \vec s_\perp \rangle
+    &= \langle \vec s_1 \cdot \vec s_1 \rangle -
+    \langle \vec s_\parallel \cdot \vec s_\parallel \rangle \\
+    &= 1 - \frac12 = \frac12
+  \end{align}
+\end{equation}
+
+** Putting everything together
+\begin{equation}
+  \begin{align}
+    \langle \vec s_1 \cdot \vec s_1(t) \rangle
+    &= \langle \vec s_\parallel^2 + \vec s_\perp^2 \cos(\omega t) \rangle \\
+    &= \frac12 \left( 1 + \cos(\omega t) \left) \\
+    %% second eq
+    \langle \vec s_2 \cdot \vec s_1(t) \rangle
+    &= \langle \vec M \cdot \vec s_\parallel \rangle
+    - \langle \vec s_\parallel^2 + \vec s_\perp^2 \cos(\omega t) \rangle \\
+    &= 1 - \frac12 \left( 1 + \cos(\omega t) \right) \\
+    &= \frac12 \left( 1 - \cos(\omega t) \right) \\
+  \end{align}
+\end{equation}
+
+Thus the dynamical structure factor is given by:
+\begin{equation}
+S(Q, t) = (1 + \cos\omega t) + \cos qL (1 - \cos\omega t)
+\end{equation}
+
+* Actually...
+This derivation is wrong, for two different reasons:
+- it holds for an uniform distribution, yet the system should obey the
+  Boltzmann distribution
+- it assumes the frequency \(\omega\) is independent of the state, yet
+  it depends on \(M\), so should be averaged accordingly.
+
+The first problem can be mitigated by simply checking the code without
+any Monte Carlo step, hence sampling from the uniform distribution.
+
+For the second problem, it is more subtle: the answer we get is
+clearly wrong. The variation of the frequency induces a phase shift
+that gets bigger as time goes: it decays. With some handwavy
+calculation it seems gaussian.
+
+* Structure factor for multiple unit cells
+Assuming multiple unit cells, yet with no coupling between these:
+\begin{equation*}
+  \vec s_{\vec q}(t) = \sum_{\vec R} e^{-i\vec q \cdot \vec R}
+  \left( s_{1\vec R}(t) + e^{-i\vec q \cdot \vec r_2} s_{2\vec R}(t) \right)
+\end{equation*}
+\begin{equation}
+  \begin{align}
+    S(\vec q, t) &= \sum_{\vec R, \vec R'} e^{i \vec q \cdot (\vec R - \vec R')}
+    \langle (\vec s_{1\vec R} \cdot \vec s_{1\vec R}(t)
+    + \vec s_{2\vec R} \cdot \vec s_{2\vec R}(t)
+    + e^{i \vec q \cdot \vec r_2} \vec s_{2\vec R} \cdot \vec s_{1\vec R}(t)
+    + e^{-i \vec q \cdot \vec r_2} \vec s_{1\vec R} \cdot \vec s_{2\vec R}(t)) \rangle \\
+    &= 2N \langle \vec s_1 \cdot \vec s_1(t) \rangle
+    + 2N \cos(\vec q \cdot \vec r_2)\langle \vec s_2 \cdot \vec s_1(t) \rangle \\
+    &= 2N \left( \frac12 + \langle s_\perp^2 \cos\omega t \rangle
+    + \cos(\vec q \vec r_2) \left(\frac12 - \langle s_\perp^2 \cos\omega t \rangle\right)  \right) \\
+    &= 2N \left( \frac12 \left( 1 + \cos(\vec q \vec r_2) \right)
+    + \langle s_\perp^2 \cos\omega t \rangle\left( 1 - \cos(\vec q \vec r_2) \right) \right)
+  \end{align}
+\end{equation}
+as \(\langle \vec s_{i\vec R} \cdot \vec s_{j\vec R'}
+\rangle = \delta_{\vec R\vec R'} \langle s_i \cdot s_j(t) \rangle \).
+
+I don't think that \(\langle s_\perp^2 \cos(\omega t) \rangle\) can be computed analytically. However, we know that:
+- for \(t=0\), this is equal to \(\langle s_\perp^2 \rangle =
+  \frac12\)
+- for \(t \rightarrow \infty\), this should vanish (because all the
+  cosines go with a random phase shift, hence averaging to zero I
+  think ?)
+
+Thus:
+\begin{equation}
+  \frac{S(\vec q, t \rightarrow \infty)}{S(\vec q, t = 0)}
+  = \frac12 \left(1 + \cos(\vec q \cdot \vec r_2)\right)
+\end{equation}
