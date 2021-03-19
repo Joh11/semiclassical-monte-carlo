@@ -6,6 +6,7 @@
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
 #SBATCH --account=s1008
+#SBATCH --cpus-per-task=12
 #SBATCH --hint=nomultithread
 
 module load daint-gpu
