@@ -14,7 +14,7 @@ const nt = 80
 const tstride = 100
 const ts = dt * (0:nt-1)
 const thermal = 20
-const nsamples = 1# 00
+const nsamples = 1000
 const stride = 15
 const nk = 7 # take the 7 first kpoints (h, h)
 
