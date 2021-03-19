@@ -5,11 +5,12 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
-#SBATCH --account s1008
+#SBATCH --account=s1008
+#SBATCH --hint=nomultithread
 
 module load daint-gpu
 module load Julia
 module load JuliaExtensions
 
 export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
-srun julia -O3 --check-bounds=no scmc.jl
+srun julia -O3 --check-bounds=no fig4.jl
