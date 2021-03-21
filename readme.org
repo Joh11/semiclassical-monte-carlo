@@ -1,4 +1,5 @@
 #+title: Semiclassical Monte Carlo
+#+startup: content
 
 * Files
 - [[file:HamiltonianMod.jl]]: module to open the hamiltonian file format
@@ -29,7 +30,7 @@ See the file [[file:checkparams.jl]] for these two steps.
 * Reproducing figure 4 from the SCMC paper
 ** Target figures
 
-** TODO Fix the wrong \(S\vec q(t)\) problem
+** Fix the wrong \(S\vec q(t)\) problem
 *** Simple try with a single sample
 #+DOWNLOADED: screenshot @ 2021-03-02 19:51:18
 #+CAPTION: Figure 4 from the paper
@@ -106,7 +107,7 @@ J|M|\) needs to be averaged.
 <2021-03-19 ven.>: I think now that my implementation is correct (see
 the unit tests).
 
-** TODO See how Sqt / Sq0 evolves
+** See how Sqt / Sq0 evolves
 Take some fixed k points always there:
 - (0, 0)
 - (pi, pi)
@@ -125,4 +126,13 @@ The 4 kpoints I choose lead to trivial factors (constant). Is it to be
 expected ? I did not set correctly the "pi" kpoints ! I should take
 \(1 + L / 2\) instead of \(L - 1\).
 
-\(t = 100\) is too large, I can easily do 10x less. 
+\(t = 100\) is too large, I can easily do 10x less.
+** Performance issues
+The code is too slow to reproduce exactly the paper's results.
+
+- revert the order of loops in =makef=
+- check for wrong order of loops in other places
+- make sure the complexity of RK8 is O(L²) (see
+  [[file:complexity_rk8.jl]])
+
+[[file:imgs/complexity_rk8.png]]
