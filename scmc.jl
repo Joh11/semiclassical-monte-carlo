@@ -113,10 +113,10 @@ function simulate(H, v, dt, ndt; stride=1)
 
     f = makef(H)
     for i in 1:ndt-1
-        println("$i / $ndt")
+        # println("$i / $ndt")
         ret[:, :, :, :, i] = v
         for n = 1:stride
-            v, s2 = dormandprince(f, v, dt)
+            v = dormandprince(f, v, dt)[1]
         end
     end
     ret[:, :, :, :, end] = v
