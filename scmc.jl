@@ -14,9 +14,7 @@ using HamiltonianMod
 "Generate a random state (normalized) of shape (3, Ns, L, L)"
 function randomstate(Ns, L)
     vec = randn(3, Ns, L, L)
-    mapslices(vec, dims=1) do u
-        normalize(u)
-    end
+    mapslices(normalize, vec, dims=1)::Array{Float64, 4}
 end
 
 "Returns a random unit vector in 3D"
