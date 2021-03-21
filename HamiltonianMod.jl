@@ -23,7 +23,7 @@ end
 struct ParamHamiltonian
     # Like Hamiltonian, but the couplings are not replaced yet
     Ns :: Int
-    couplings :: Array{Array{Tuple{Int, Int, Int, Int}}}
+    couplings :: Array{Array{Tuple{Int, Int, Int, Int}, 1}, 1}
     rs :: Array{Float64, 2} # shape: (2, Ns)
     # (lattice[:, 1] is the first lattice vector)
     lattice :: Array{Float64, 2} # shape: (2, 2)
@@ -31,7 +31,7 @@ end
 
 struct Hamiltonian
     Ns :: Int
-    couplings :: Array{Array{Tuple{Int, Int, Int, Float64}}}
+    couplings :: Array{Array{Tuple{Int, Int, Int, Float64}, 1}, 1}
     rs :: Array{Float64, 2} # shape: (2, Ns)
     # (lattice[:, 1] is the first lattice vector)
     lattice :: Array{Float64, 2} # shape: (2, 2) 
