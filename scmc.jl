@@ -29,7 +29,7 @@ function mcstep!(H, v, T, niter=1)
     Ns = H.Ns
     N = Ns * L^2
     niter *= N
-        
+    
     for n in 1:niter
         # choose a random spin
         i = rand(1:L)
@@ -61,12 +61,13 @@ end
 "Build the function representing the time derivative of v"
 function makef(H)
     function(v)
-        Ns, L = size(v)[2:3]
+        Ns = size(v)[2]
+        L = size(v)[3]
         
         ret = zeros(3, Ns, L, L)
-        for s in 1:Ns
+        for j in 1:L
             for i in 1:L
-                for j in 1:L
+                for s in 1:Ns
                     ret[:, s, i, j] = - v[:, s, i, j] × localfield(H, v, i, j, s)
                 end
             end
@@ -83,8 +84,6 @@ function dormandprince(f, v, dt)
     a51, a52, a53, a54 = [19372/6561, -25360/2187, 64448/6561, -212/729]
     a61, a62, a63, a64, a65 = [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656]
     a71, a72, a73, a74, a75, a76 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]
-
-    
     
     k1 = f(v)
     k2 = f(v + dt * (a21  * k1))
@@ -106,7 +105,7 @@ function dormandprince(f, v, dt)
 end
 
 """Advances the state v in time using the semiclassical
-equations. Returns a (3, Ns, L, L, ndt) vector. """
+    equations. Returns a (3, Ns, L, L, ndt) vector. """
 function simulate(H, v, dt, ndt; stride=1)
     Ns, L = size(v)[2:3]
     ret = zeros(3, Ns, L, L, ndt)
