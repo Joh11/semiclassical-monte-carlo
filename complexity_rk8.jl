@@ -61,8 +61,8 @@ function benchmark()
     # trigger the JIT
     @elapsed runone(1)
     
-    L = 144
-    nsamples = 1
+    L = 40
+    nsamples = 10
 
     time = 0
     for n = 1:nsamples
@@ -70,7 +70,7 @@ function benchmark()
         time += @elapsed runone(L)
     end
     time /= nsamples
-    println("L = $L: $time seconds ($nsamples samples)")
+    println("L = $L: $time seconds ($nsamples samples) -- ($(round(Int, time / 80 * 1000)) ms per RK8 step)")
 end
 
 
