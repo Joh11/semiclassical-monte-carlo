@@ -95,7 +95,7 @@ function dormandprince(f, v, dt)
 
     # First solution
     b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
-    ret = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+    v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
 
     # Second solution
     # b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
@@ -112,7 +112,7 @@ function simulate(H, v, vs, dt, ndt; stride=1)
         # println("$i / $ndt")
         vs[:, :, :, :, i] = v
         for n = 1:stride
-            dormandprince(f, v, dt)
+            v = dormandprince(f, v, dt)
         end
     end
     vs[:, :, :, :, end] = v
