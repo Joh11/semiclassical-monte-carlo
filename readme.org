@@ -136,3 +136,9 @@ The code is too slow to reproduce exactly the paper's results.
   [[file:complexity_rk8.jl]])
 
 [[file:imgs/complexity_rk8.png]]
+
+** Advices from Nikita
+- before :: L = 40: 2.9622924454 seconds (10 samples)
+- localfield loop + unpack :: L = 40: 1.0795456017 seconds (10 samples)
+
+Try 

@@ -3,13 +3,13 @@ include("scmc.jl")
 using Plots
 using LinearAlgebra
 
-H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+const H = loadhamiltonian("hamiltonians/kagome.dat", [1])
 
 function runone(L)
     dt = 0.1
     nt = 80
     v = randomstate(H.Ns, L)
-    simulate(H, v, dt, nt)
+    @time simulate(H, v, dt, nt)
 end
 
 function linear_regression(x, y)
@@ -59,14 +59,15 @@ end
 
 function benchmark()
     # trigger the JIT
-    runone(1)
+    @elapsed runone(1)
     
-    L = 40
-    nsamples = 10
+    L = 144
+    nsamples = 1
 
-    time = mapreduce(+, 1:nsamples) do n
+    time = 0
+    for n = 1:nsamples
         println("Doing sample $n / $nsamples ...")
-        @elapsed runone(L)
+        time += @elapsed runone(L)
     end
     time /= nsamples
     println("L = $L: $time seconds ($nsamples samples)")

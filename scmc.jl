@@ -68,7 +68,7 @@ function makef(H)
         for j in 1:L
             for i in 1:L
                 for s in 1:Ns
-                    ret[:, s, i, j] = - v[:, s, i, j] × localfield(H, v, i, j, s)
+                    @views ret[:, s, i, j] = localfield(H, v, i, j, s) × v[:, s, i, j]
                 end
             end
         end
@@ -95,33 +95,37 @@ function dormandprince(f, v, dt)
 
     # First solution
     b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
-    ret1 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+    ret = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
 
     # Second solution
-    b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
-    ret2 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+    # b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
+    # ret2 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+end
 
-    ret1, ret2
+"""Same as the other method, except that this time the result vector
+is not allocated """
+function simulate(H, v, vs, dt, ndt; stride=1)
+    vs[:, :, :, :, 1] = v
+
+    f = makef(H)
+    for i in 1:ndt-1
+        # println("$i / $ndt")
+        vs[:, :, :, :, i] = v
+        for n = 1:stride
+            dormandprince(f, v, dt)
+        end
+    end
+    vs[:, :, :, :, end] = v
+    
+    vs
 end
 
 """Advances the state v in time using the semiclassical
     equations. Returns a (3, Ns, L, L, ndt) vector. """
 function simulate(H, v, dt, ndt; stride=1)
     Ns, L = size(v)[2:3]
-    ret = zeros(3, Ns, L, L, ndt)
-    ret[:, :, :, :, 1] = v
-
-    f = makef(H)
-    for i in 1:ndt-1
-        # println("$i / $ndt")
-        ret[:, :, :, :, i] = v
-        for n = 1:stride
-            v = dormandprince(f, v, dt)[1]
-        end
-    end
-    ret[:, :, :, :, end] = v
-    
-    ret
+    vs = zeros(3, H.Ns, L, L, ndt)
+    simulate(H, v, vs, dt, ndt; stride=stride)
 end
 
 @doc raw"""Computes the space FT of the given time
