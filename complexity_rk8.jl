@@ -19,38 +19,59 @@ function linear_regression(x, y)
     inv(transpose(A) * A) * transpose(A) * b
 end
 
-Ls = [2, 4, 6, 10, 20, 40, 60, 80, 100]
-nsamples = 10
-times = zeros(nsamples, length(Ls))
+function complexity_analysis()
+    Ls = [2, 4, 6, 10, 20, 40, 60, 80, 100]
+    nsamples = 10
+    times = zeros(nsamples, length(Ls))
 
-# trigger the JIT
-runone(1)
+    # trigger the JIT
+    runone(1)
 
-for iL = 1:length(Ls)
-    L = Ls[iL]
-    println("Doing L=$L ...")
+    for iL = 1:length(Ls)
+        L = Ls[iL]
+        println("Doing L=$L ...")
 
-    for n = 1:nsamples
-        println("Sample $n / $nsamples")
-        times[n, iL] = @elapsed runone(L)
+        for n = 1:nsamples
+            println("Sample $n / $nsamples")
+            times[n, iL] = @elapsed runone(L)
+        end
     end
+
+    avg_time = reshape(mapslices(mean, times; dims=[1]), (:,))
+
+    a, b = linear_regression(log.(Ls), log.(avg_time))
+    plot()
+
+    scatter!(Ls, avg_time;
+             xaxis=:log,
+             yaxis=:log)
+
+    xlabel!("L")
+    ylabel!("time [s]")
+
+    # plot the linear regression
+    Ls_lin = Array(1:100)
+    plot!(Ls_lin, exp.(b) .* Ls_lin.^a;
+          xaxis=:log,
+          yaxis=:log,
+          label="\$\\propto L^{$(round(a, digits=2))}\$")
 end
 
-avg_time = reshape(mapslices(mean, times; dims=[1]), (:,))
+function benchmark()
+    # trigger the JIT
+    runone(1)
+    
+    L = 40
+    nsamples = 10
 
-a, b = linear_regression(log.(Ls), log.(avg_time))
-plot()
+    time = mapreduce(+, 1:nsamples) do n
+        println("Doing sample $n / $nsamples ...")
+        @elapsed runone(L)
+    end
+    time /= nsamples
+    println("L = $L: $time seconds ($nsamples samples)")
+end
 
-scatter!(Ls, avg_time;
-        xaxis=:log,
-        yaxis=:log)
 
-xlabel!("L")
-ylabel!("time [s]")
-
-# plot the linear regression
-Ls_lin = Array(1:100)
-plot!(Ls_lin, exp.(b) .* Ls_lin.^a;
-      xaxis=:log,
-      yaxis=:log,
-      label="\$\\propto L^{$(round(a, digits=2))}\$")
+benchmark()
+# complexity_analysis()
