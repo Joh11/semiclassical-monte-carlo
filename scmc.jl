@@ -60,7 +60,8 @@ end
 
 "Build the function representing the time derivative of v"
 function makef(H)
-    function(v)
+    # give it a name for the profiler
+    function f(v)
         Ns = size(v)[2]
         L = size(v)[3]
         
