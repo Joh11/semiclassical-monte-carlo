@@ -91,13 +91,17 @@ function loadhamiltonian(path, couplings)
     mkhamiltonian(loadparamhamiltonian(path), couplings)
 end
 
-function localfield(H, v, i, j, s)
+@inline function localfield(H, v, i, j, s)
     L = size(v)[3]
-    sum(H.couplings[s]) do (Δi, Δj, s2, c)
-        c * v[:, s2,
-              wrapindex(i + Δi, L),
-              wrapindex(j + Δj, L)]
+    ret = zeros(3)
+
+    for (Δi, Δj, s2, c) in H.couplings[s]
+        ret[1] += c * v[1, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
+        ret[2] += c * v[2, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
+        ret[3] += c * v[3, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
     end
+    
+    ret
 end
 
 "Compute the energy per site of the given state"
