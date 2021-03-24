@@ -2,6 +2,7 @@ include("scmc.jl")
 
 using Plots
 using LinearAlgebra
+using StatProfilerHTML
 
 const H = loadhamiltonian("hamiltonians/kagome.dat", [1])
 
@@ -73,6 +74,6 @@ function benchmark()
     println("L = $L: $time seconds ($nsamples samples) -- ($(round(Int, time / 80 * 1000)) ms per RK8 step)")
 end
 
-
+# @profilehtml benchmark()
 benchmark()
 # complexity_analysis()
