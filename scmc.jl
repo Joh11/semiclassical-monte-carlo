@@ -86,16 +86,16 @@ function dormandprince(f, v, dt)
     a71, a72, a73, a74, a75, a76 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]
     
     k1 = f(v)
-    k2 = f(v + dt * (a21  * k1))
-    k3 = f(v + dt * (a31  * k1 + a32 * k2))
-    k4 = f(v + dt * (a41  * k1 + a42 * k2 + a43 * k3))
-    k5 = f(v + dt * (a51  * k1 + a52 * k2 + a53 * k3 + a54 * k4))
-    k6 = f(v + dt * (a61  * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5))
-    k7 = f(v + dt * (a71  * k1 + a72 * k2 + a73 * k3 + a74 * k4 + a75 * k5 + a76 * k6))
+    k2 = f(@. v + dt * (a21 * k1))
+    k3 = f(@. v + dt * (a31 * k1 + a32 * k2))
+    k4 = f(@. v + dt * (a41 * k1 + a42 * k2 + a43 * k3))
+    k5 = f(@. v + dt * (a51 * k1 + a52 * k2 + a53 * k3 + a54 * k4))
+    k6 = f(@. v + dt * (a61 * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5))
+    k7 = f(@. v + dt * (a71 * k1 + a72 * k2 + a73 * k3 + a74 * k4 + a75 * k5 + a76 * k6))
 
     # First solution
     b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
-    v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
+    @. v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
 
     # Second solution
     # b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
@@ -105,8 +105,6 @@ end
 """Same as the other method, except that this time the result vector
 is not allocated """
 function simulate(H, v, vs, dt, ndt; stride=1)
-    vs[:, :, :, :, 1] = v
-
     f = makef(H)
     for i in 1:ndt-1
         # println("$i / $ndt")
