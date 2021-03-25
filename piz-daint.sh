@@ -8,6 +8,8 @@
 #SBATCH --account=mr27
 #SBATCH --cpus-per-task=72
 #SBATCH --hint=nomultithread
+#SBATCH --output=fig4.out
+#SBATCH --error=fig4.err
 
 module load daint-mc
 module load Julia
