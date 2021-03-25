@@ -29,11 +29,13 @@ Sqt = zeros(Complex{Float64}, L, L, nt)
     println("thermalization $n finished")
 
     for i = 1:nsamples_per_thread
-        mcstep!(H, v, T, stride)
-        vs = simulate(H, v, dt, nt; stride=tstride)
-        S = structuralfactor(H, vs, dt)
-        global Sqt += S ./ reshape(S[:, :, 1], (L, L, 1))
-        println("Done sample $i / $nsamples_per_thread for thread $n")
+        time = @elapsed begin
+            mcstep!(H, v, T, stride)
+            vs = simulate(H, v, dt, nt; stride=tstride)
+            S = structuralfactor(H, vs, dt)
+            global Sqt += S ./ reshape(S[:, :, 1], (L, L, 1))
+        end
+        println("Done sample $i / $nsamples_per_thread for thread $n in $time seconds")
     end
 end
 
