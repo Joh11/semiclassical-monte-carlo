@@ -1,12 +1,11 @@
 include("scmc.jl")
 using Plots
-using Base.Threads: @spawn, threadid, nthreads
+using Base.Threads: @threads, threadid, nthreads
 using LaTeXStrings
 using HDF5: h5write, h5open, attributes
 
 @show nthreads()
 
-# const Ls = [144]
 const L = 144
 const T = 0.17
 const dt = 0.1
@@ -14,34 +13,28 @@ const nt = 80
 const tstride = 100
 const ts = dt * (0:nt-1)
 const thermal = 20
-const nsamples = 1000
+const nsamples_per_thread = 14
 const stride = 15
 const nk = 7 # take the 7 first kpoints (h, h)
 
-H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+@assert nthreads() == 72 # so that we get ~ 1,000 samples
 
+H = loadhamiltonian("hamiltonians/kagome.dat", [1])
 Sqt = zeros(Complex{Float64}, L, L, nt)
 
-function runsim(v, n)
-    vs = simulate(H, v, dt, nt; stride=tstride)
-    S = structuralfactor(H, vs, dt)
-    global Sqt += S ./ reshape(S[:, :, 1], (L, L, 1))
-    println("Done simulating the $(n)th sample in thread $(threadid())")
-end
-
-@sync begin
-    # thermalization
+@threads for n = 1:nthreads()
     v = randomstate(H.Ns, L)
+    # thermalization
     mcstep!(H, v, T, thermal)
-    println("thermalization finished")
-    
-    for n in 1:nsamples
+    println("thermalization $n finished")
+
+    for i = 1:nsamples_per_thread
         mcstep!(H, v, T, stride)
-        @spawn runsim(v, n)
-        
-        println("sample $n done (thread $(threadid()))")
+        vs = simulate(H, v, dt, nt; stride=tstride)
+        S = structuralfactor(H, vs, dt)
+        global Sqt += S ./ reshape(S[:, :, 1], (L, L, 1))
+        println("Done sample $i / $nsamples_per_thread for thread $n")
     end
-    println("finished")
 end
 
 Sqt /= nsamples
