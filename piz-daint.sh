@@ -2,11 +2,11 @@
 #SBATCH --job-name="scmc"
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=36
 #SBATCH --partition=normal
 #SBATCH --constraint=mc
 #SBATCH --account=mr27
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=72
 #SBATCH --hint=nomultithread
 
 module load daint-gpu
