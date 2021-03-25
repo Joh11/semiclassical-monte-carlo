@@ -4,9 +4,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=normal
-#SBATCH --constraint=gpu
-#SBATCH --account=s1008
-#SBATCH --cpus-per-task=12
+#SBATCH --constraint=mc
+#SBATCH --account=mr27
+#SBATCH --cpus-per-task=2
 #SBATCH --hint=nomultithread
 
 module load daint-gpu
