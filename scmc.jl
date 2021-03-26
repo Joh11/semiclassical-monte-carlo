@@ -112,7 +112,7 @@ function dormandprince(f!, v, dt, ks)
 end
 
 """Same as the other method, except that this time the result vector
-is not allocated """
+    is not allocated """
 function simulate(H, v, vs, dt, ndt; stride=1)
     f! = makef(H)
     L = size(v)[3]
@@ -130,21 +130,21 @@ function simulate(H, v, vs, dt, ndt; stride=1)
 end
 
 """Advances the state v in time using the semiclassical
-    equations. Returns a (3, Ns, L, L, ndt) vector. """
+        equations. Returns a (3, Ns, L, L, ndt) vector. """
 function simulate(H, v, dt, ndt; stride=1)
-    Ns, L = size(v)[2:3]
+    Ns, L = size(v)[1:2]
     vs = zeros(Vec3, H.Ns, L, L, ndt)
     simulate(H, v, vs, dt, ndt; stride=stride)
 end
 
 @doc raw"""Computes the space FT of the given time
-    evolved state v. It is defined as such: 
-    ``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
-    e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
+        evolved state v. It is defined as such: 
+        ``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
+        e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
 
-    Practically, takes a (3, Ns, L, L, ndt) array, and returns a (3, L, L,
-    ndt) array.  
-    """
+        Practically, takes a (3, Ns, L, L, ndt) array, and returns a (3, L, L,
+        ndt) array.  
+        """
 function ftspacespins(H, vs, dt)
     Ns, L = size(vs)[2:3]
     ndt = size(vs)[5]
@@ -175,14 +175,14 @@ function ftspacespins(H, vs, dt)
 end
 
 @doc raw"""Computes the (dynamical) structural factor of the given time
-    evolved state v. It is defined as such: 
-    ``S(\vec Q, t) = <\vec s_{-\vec Q}(0) \vec s_{\vec Q}(t)>``, with
-    ``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
-    e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
+        evolved state v. It is defined as such: 
+        ``S(\vec Q, t) = <\vec s_{-\vec Q}(0) \vec s_{\vec Q}(t)>``, with
+        ``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
+        e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
 
-    Practically, takes a (3, Ns, L, L, ndt) array, and returns a (L, L,
-    ndt) array.
-    """
+        Practically, takes a (3, Ns, L, L, ndt) array, and returns a (L, L,
+        ndt) array.
+        """
 function structuralfactor(H, vs, dt)
     Ns, L = size(vs)[2:3]
     ndt = size(vs)[5]
@@ -197,7 +197,7 @@ function structuralfactor(H, vs, dt)
 end
 
 @doc raw"""Computes the (dynamical) frequency structural factor
-    ``S(\vec Q, \omega)`` of the given time evolved state v. """
+        ``S(\vec Q, \omega)`` of the given time evolved state v. """
 function frequencystructuralfactor(H, vs, dt)
     Sqt = structuralfactor(H, vs, dt)
     Sqω = fft(Sqt, 3)
