@@ -94,11 +94,11 @@ end
 
 @inline function localfield(H, v, i, j, s)
     L = size(v)[2]
-    ret = @SVector zeros(3)
+    ret = @MVector zeros(3)
 
-    for (Δi, Δj, s2, c) in H.couplings[s]
+    @allocated for (Δi, Δj, s2, c) in H.couplings[s]
         # println("$((L, i, j, Δi, Δj, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)))")
-        ret += c * v[s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
+        ret .+= c .* v[s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
     end
     
     ret
