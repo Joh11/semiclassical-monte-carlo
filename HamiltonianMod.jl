@@ -96,7 +96,7 @@ end
     L = size(v)[2]
     ret = @MVector zeros(3)
 
-    @allocated for (Δi, Δj, s2, c) in H.couplings[s]
+    for (Δi, Δj, s2, c) in H.couplings[s]
         # println("$((L, i, j, Δi, Δj, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)))")
         ret .+= c .* v[s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
     end
