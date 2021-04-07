@@ -6,7 +6,6 @@ using HDF5: h5write, h5open, attributes
 
 @show nthreads()
 
-# const Ls = [144]
 const L = 144
 const T = 0.17
 const dt = 0.1

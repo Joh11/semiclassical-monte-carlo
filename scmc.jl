@@ -45,12 +45,12 @@ function mcstep!(H, v, T, niter=1)
         s = rand(1:Ns)
         # choose a random orientation
         u = randomunitvec()
-        uold = v[:, s, i, j]
+        uold = v[s, i, j]
         
         ΔE = deltaenergy(H, v, u, i, j, s)
         # update spin if accepted
         if ΔE < 0 || rand() < exp(-ΔE / T)
-            v[:, s, i, j] = u
+            v[s, i, j] = u
         else
             # reject (do nothing actually)
         end
@@ -59,7 +59,7 @@ end
 
 "Computes the magnetization, that is the mean of all spins (thus a 3D vector)"
 function magnetization(v)
-    sum(v; dims=(2, 3, 4))
+    sum(v)
 end
 
 function correlation(v1, v2)
@@ -73,7 +73,6 @@ function makef(H)
         Ns = size(v)[1]
         L = size(v)[2]
         
-        # ret = zeros(3, Ns, L, L)
         for j in 1:L
             for i in 1:L
                 for s in 1:Ns
@@ -146,12 +145,26 @@ end
         ndt) array.  
         """
 function ftspacespins(H, vs, dt)
-    Ns, L = size(vs)[2:3]
-    ndt = size(vs)[5]
+    Ns, L = size(vs)[1:2]
+    ndt = size(vs)[4]
 
     kxs = 2π / L * (0:L-1)
     kys = 2π / L * (0:L-1)
     rs = H.rs
+
+    # copy everything to a simple array
+    vs_temp = zeros(3, Ns, L, L, ndt)
+    for t in 1:ndt
+        for j in 1:L
+            for i in 1:L
+                for s in 1:Ns
+                    vs_temp[1, s, i, j, t] = vs[s, i, j, t][1]
+                    vs_temp[2, s, i, j, t] = vs[s, i, j, t][2]
+                    vs_temp[3, s, i, j, t] = vs[s, i, j, t][3]
+                end
+            end
+        end
+    end
     
     sqsublattice = zeros(Complex{Float64}, 3, Ns, L, L, ndt)
     
@@ -168,7 +181,7 @@ function ftspacespins(H, vs, dt)
             end
         end
         
-        sqsublattice[:, s, :, :, :] = fft(vs[:, s, :, :, :], [2, 3]) .* phase_shift
+        sqsublattice[:, s, :, :, :] = fft(vs_temp[:, s, :, :, :], [2, 3]) .* phase_shift
     end
 
     reshape(sum(sqsublattice; dims=[2]), (3, L, L, ndt))
@@ -184,8 +197,8 @@ end
         ndt) array.
         """
 function structuralfactor(H, vs, dt)
-    Ns, L = size(vs)[2:3]
-    ndt = size(vs)[5]
+    Ns, L = size(vs)[1:2]
+    ndt = size(vs)[4]
 
     sq = ftspacespins(H, vs, dt)
 
@@ -242,86 +255,3 @@ function plotfrequencystructuralfactor(Sqω; lognorm=true)
     # , ["Γ", "M", "X"]
     heatmap(transpose(z); xticks=([1, 7, 13, 19], ["Γ", "M", "X", "Γ"])), z
 end
-
-# -----------------------------------------------------------------------------
-# Dev stuff
-# -----------------------------------------------------------------------------
-
-"""Make sure the energy and magnetization are conserved"""
-function checkconservation(H, v)
-    dt = 0.1
-    ndt = 1000
-    vs = simulate(H, v, dt, ndt)
-
-    E = zeros(ndt)
-    m = zeros(3, ndt)
-
-    for n in 1:ndt
-        E[n] = energy(H, v)
-        m[:, n] = magnetization(v)
-    end
-
-    display(plot(E))
-
-    E, m
-end
-
-function reproducefig4()
-    H = loadhamiltonian("hamiltonians/kagome.dat", [1])
-    output = "kagome-fig4-t40.h5"
-    
-    T = 10
-    L = 30
-    nsamples = 1000
-    dt = 0.1
-    nt = 400
-    stride = 15
-    thermal = 20
-
-    E = 0
-    m = zeros(3)
-    Sqω = zeros(Complex{Float64}, L, L, nt)
-    Sqt = zeros(Complex{Float64}, L, L, nt)
-    vs = zeros(3, H.Ns, L, L, nt)
-    
-    # initial state
-    v = randomstate(H.Ns, L)
-
-    # thermalization
-    println("Doing thermalization")
-    mcstep!(H, v, T, thermal)
-    E = energy(H, v)
-    m = magnetization(v)
-
-    # time evolution
-    println("Doing simulation")
-    vs = simulate(H, v, dt, nt)
-    println("Computing structural factor")
-    Sqω = frequencystructuralfactor(H, vs, dt)
-    Sqt = structuralfactor(H, vs, dt)
-
-    function saveh5(output, i, E, m, vs, Sqω, Sqt)
-        h5write(output, "$i/E", E)
-        h5write(output, "$i/m", m)
-        h5write(output, "$i/vs", vs)
-        h5write(output, "$i/Sqω", Sqω)
-        h5write(output, "$i/Sqt", Sqt)
-    end
-    
-    saveh5(output, 1, E, m, vs, Sqω, Sqt)
-    
-    for i = 2:nsamples
-        println("$i / $nsamples")
-        mcstep!(H, v, T, stride)
-        E = energy(H, v)
-        m = magnetization(v)
-
-        # time evolution
-        vs = simulate(H, v, dt, nt)
-        Sqω = frequencystructuralfactor(H, vs, dt)
-        Sqt = structuralfactor(H, vs, dt)
-        saveh5(output, i, E, m, vs, Sqω, Sqt)
-    end
-end
-
-# reproducefig4()

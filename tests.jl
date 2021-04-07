@@ -152,20 +152,20 @@ end
     
     # 1. check that the decaying term decays
     decay = mapreduce(+, samples) do vs
-        v = vs[:, :, :, :, 1]
-        s1, s2 = v[:, 1, 1, 1], v[:, 2, 1, 1]
+        v = vs[:, :, :, 1]
+        s1, s2 = v[1, 1, 1], v[2, 1, 1]
         M = s1 + s2
         normM = norm(M)
         Mhat = M / normM
         sperp = s1 - dot(s1, Mhat) * Mhat
         
-        reshape(mapslices(s -> dot(sperp, s), vs[:, 1, 1, 1, :]; dims=[1]), :)
+        reshape(map(s -> dot(sperp, s), vs[1, 1, 1, :]), :)
     end
     decay /= nsamples
     # plot(decay)
     # pretty high tolerance because this is random
     @test decay[1] ≈ 1/2 atol=3e-2
-    @test decay[end] ≈ 0 atol=3e-2
+    @test decay[end] ≈ 0 atol=4e-2
     
     # 2. check the structure factor
     Sqt = mapreduce(vs -> structuralfactor(H, vs, dt), +, samples)
@@ -180,7 +180,7 @@ end
     # 1000     | 0.13
     # 2000     | 0.06
     # this is a lame atol but it is slowly vanishing...
-    @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=0.03
+    @test reduce(max, imag.(Sqt[2, 1, :]) ./ real.(Sqt[2, 1, :])) ≈ 0 atol=5e-2
     
     # plot(real.(Sqt[2, 1, :]), label="Sqt")
     # plot!(2N * (decay .+ 0.5), label="Sqt from the decaying term")
@@ -241,7 +241,7 @@ end
 
     # check energy conservation
     E0 = energy(H, v)
-    Es = mapslices(vs, dims=[1, 2, 3, 4]) do v
+    Es = mapslices(vs, dims=[1, 2, 3]) do v
         energy(H, v)
     end
     @test all(Es .≈ E0)
@@ -250,7 +250,7 @@ end
 
     # check magnetization conservation
     m0 = magnetization(v)
-    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3, 4]), (3, :))
+    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3]), (3, :))
     @test all(ms .≈ m0)
 
     # check FT of spins

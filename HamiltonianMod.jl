@@ -97,7 +97,6 @@ end
     ret = @MVector zeros(3)
 
     for (Δi, Δj, s2, c) in H.couplings[s]
-        # println("$((L, i, j, Δi, Δj, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)))")
         ret .+= c .* v[s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
     end
     
@@ -113,9 +112,7 @@ function energy(H, v)
     for s in 1:H.Ns
         for j in 1:L
             for i in 1:L
-                S = v[:, s, i, j]
-                h = localfield(H, v, i, j, s)
-                E += S⋅h
+                E += v[s, i, j] ⋅ localfield(H, v, i, j, s)
             end
         end
     end
@@ -124,7 +121,7 @@ end
 
 "Faster way to compute the variation of energy when updating a single spin"
 function deltaenergy(H, v, S, i, j, s)
-    ΔS = S - v[:, s, i, j]
+    ΔS = S - v[s, i, j]
     # WARNING this only holds for symmetric couplings (Jij = Jji)
     2 .* ΔS ⋅ localfield(H, v, i, j, s)
 end
