@@ -13,8 +13,8 @@ end
     Ns, L = 10, 100
     v = randomstate(Ns, L)
 
-    @test size(v) == (3, Ns, L, L)
-    @test all(mapslices(norm, v; dims=1) .≈ 1)
+    @test size(v) == (Ns, L, L)
+    @test all(map(norm, v) .≈ 1)
 end
 
 @testset "rec lattice" begin
