@@ -51,7 +51,7 @@ end
         end
         true
     end
-
+    
     H = loadhamiltonian("hamiltonians/kagome.dat", [1])
     @test check_symmetryp(H)
 end
@@ -70,7 +70,7 @@ end
 
     ΔE = deltaenergy(H, v, u, i, j, s)
 
-    v[:, s, i, j] = u
+    v[s, i, j] = u
     newE = energy(H, v)
 
     @test (newE - E) ≈ ΔE
