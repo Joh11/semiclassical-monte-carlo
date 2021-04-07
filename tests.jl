@@ -87,13 +87,13 @@ end
     vs = simulate(H, v, dt, nt)
     
     # make sure the magnetization is conserved
-    m0 = v[:, 1, 1, 1] + v[:, 2, 1, 1]
-    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3, 4]), (3, :))
+    m0 = v[1, 1, 1] + v[2, 1, 1]
+    ms = reshape(mapslices(magnetization, vs; dims=[1, 2, 3]), (3, :))
     @test all(ms .≈ m0)
     
     # make sure the energy is conserved
     E0 = energy(H, v)
-    Es = mapslices(vs; dims=[1, 2, 3, 4]) do v
+    Es = mapslices(vs; dims=[1, 2, 3]) do v
         energy(H, v)
     end
     @test reduce(max, Es .- E0) ≈ 0 atol=1e-5
@@ -101,19 +101,19 @@ end
     # make sure it matches the analytical solution
     m0hat = normalize(m0)
     ω = norm(m0) # should be J|M|, but here J = 1
-    s0 = v[:, 1, 1, 1] # initial condition for s_1
+    s0 = v[1, 1, 1] # initial condition for s_1
     # decompose into parallel and normal to M
     spar = (s0 ⋅ m0hat) * m0hat
     snor = s0 - spar
 
     a = snor
     b = m0hat × a
-    vs_ana = zeros(3, H.Ns, 1, 1, nt)
+    vs_ana = zeros(Vec3, H.Ns, 1, 1, nt)
 
     for n = 1:nt # construct the analytical solution
         t = (n - 1) * dt
-        vs_ana[:, 1, 1, 1, n] = spar +  a * cos(ω * t) + b * sin(ω * t) # s1
-        vs_ana[:, 2, 1, 1, n] = m0 - vs_ana[:, 1, 1, 1, n] # s2 = M - s1
+        vs_ana[1, 1, 1, n] = spar +  a * cos(ω * t) + b * sin(ω * t) # s1
+        vs_ana[2, 1, 1, n] = m0 - vs_ana[1, 1, 1, n] # s2 = M - s1
     end
 
     @test vs ≈ vs_ana atol=1e-4
