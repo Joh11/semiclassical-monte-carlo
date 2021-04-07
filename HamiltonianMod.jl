@@ -1,10 +1,11 @@
 module HamiltonianMod
 
 using LinearAlgebra
+using StaticArrays
 
-export loadparamhamiltonian, loadhamiltonian, localfield, energy, deltaenergy, reciprocallattice
+export loadparamhamiltonian, loadhamiltonian, localfield, energy, deltaenergy, reciprocallattice, wrapindex
 
-function wrapindex(i, L)
+@inline function wrapindex(i, L)
     1 + mod(i - 1, L)
 end
 
@@ -92,13 +93,11 @@ function loadhamiltonian(path, couplings)
 end
 
 @inline function localfield(H, v, i, j, s)
-    L = size(v)[3]
-    ret = zeros(3)
+    L = size(v)[2]
+    ret = @MVector zeros(3)
 
     for (Δi, Δj, s2, c) in H.couplings[s]
-        ret[1] += c * v[1, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
-        ret[2] += c * v[2, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
-        ret[3] += c * v[3, s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
+        ret .+= c .* v[s2, wrapindex(i + Δi, L), wrapindex(j + Δj, L)]
     end
     
     ret
@@ -113,9 +112,7 @@ function energy(H, v)
     for s in 1:H.Ns
         for j in 1:L
             for i in 1:L
-                S = v[:, s, i, j]
-                h = localfield(H, v, i, j, s)
-                E += S⋅h
+                E += v[s, i, j] ⋅ localfield(H, v, i, j, s)
             end
         end
     end
@@ -124,7 +121,7 @@ end
 
 "Faster way to compute the variation of energy when updating a single spin"
 function deltaenergy(H, v, S, i, j, s)
-    ΔS = S - v[:, s, i, j]
+    ΔS = S - v[s, i, j]
     # WARNING this only holds for symmetric couplings (Jij = Jji)
     2 .* ΔS ⋅ localfield(H, v, i, j, s)
 end

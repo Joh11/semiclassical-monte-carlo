@@ -62,7 +62,7 @@ function benchmark()
     # trigger the JIT
     @elapsed runone(1)
     
-    L = 40
+    L = 144
     nsamples = 10
 
     time = 0
