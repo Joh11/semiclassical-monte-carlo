@@ -1,4 +1,4 @@
-include("scmc.jl")
+include("../src/scmc.jl")
 
 using Test
 using DifferentialEquations
