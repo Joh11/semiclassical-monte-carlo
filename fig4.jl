@@ -11,13 +11,15 @@ const T = 0.17
 const dt = 0.1
 const nt = 80
 const tstride = 100
-const ts = dt * (0:nt-1)
+const ts = dt * tstride * (0:nt-1)
 const thermal = 20
 const nsamples_per_thread = 14
 const stride = 15
 const nk = 7 # take the 7 first kpoints (h, h)
 
 @assert nthreads() == 72 # so that we get ~ 1,000 samples
+
+const nsamples = nsamples_per_thread * nthreads()
 
 H = loadhamiltonian("hamiltonians/kagome.dat", [1])
 Sqt = zeros(Complex{Float64}, L, L, nt)
