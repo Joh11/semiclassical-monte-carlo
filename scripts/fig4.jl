@@ -1,4 +1,5 @@
-include("scmc.jl")
+include("../src/scmc.jl")
+
 using Plots
 using Base.Threads: @threads, threadid, nthreads
 using LaTeXStrings
