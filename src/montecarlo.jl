@@ -1,13 +1,3 @@
-using Random
-using LinearAlgebra
-# TODO find why this throws a warning
-# using Plots 
-using FFTW
-using Printf
-using Statistics
-using HDF5: h5write, h5read
-using StaticArrays
-
 const Vec3 = SVector{3, Float64}
 
 "Returns a random unit vector in 3D"

@@ -1,4 +1,4 @@
-using SCMC
+using SemiClassicalMonteCarlo
 using Test
 using DifferentialEquations
 

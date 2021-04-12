@@ -1,6 +1,3 @@
-using LinearAlgebra
-using StaticArrays
-
 @inline function wrapindex(i, L)
     1 + mod(i - 1, L)
 end
