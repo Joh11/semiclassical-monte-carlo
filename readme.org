@@ -147,3 +147,12 @@ excitation modes of the bilayer Heisenberg model]].
 They use 3D momenta, with the z component discretized to be 0 or
 \(\pi\). For simplicity, I will only reproduce the \(k_z = 0\) band
 diagrams.
+
+** Reproduce Fig. 1 (upper figures only)
+Parameters to find:
+- Temperature :: \(\beta J = 50\) so \(T = 0.02\)
+- Number of samples
+- System size :: L = 20
+
+*** Find the optimal params
+(Do it for several \(g\) to be safe)

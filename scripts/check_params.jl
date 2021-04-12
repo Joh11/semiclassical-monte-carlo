@@ -1,6 +1,7 @@
 using LaTeXStrings
+using Plots
 
-include("scmc.jl")
+include("../src/scmc.jl")
 
 "Plot the energy and magnetization to determine the optimal number of thermalization steps"
 function thermalization(H, L, T)
@@ -51,15 +52,15 @@ function correlation(H, L, T; thermal=0)
          ylabel="correlation")
 end
 
-# Load the Kagome lattice hamiltonian
-H = loadhamiltonian("hamiltonians/kagome.dat", [1])
-L = 144
-T = 0.17
+# Load the hamiltonian
+H = loadhamiltonian("../hamiltonians/bilayer-square.dat", [1])
+L = 20
+T = 0.02
 
 # 1. check the thermalization step
-# thermalization(H, L, T)
+thermalization(H, L, T)
 # we can see that 20 steps is enough
 
 # 2. check the decorrelation steps between two samples
-correlation(H, L, T; thermal=20)
+# correlation(H, L, T; thermal=20)
 # we can see that 15 steps is enough
