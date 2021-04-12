@@ -23,7 +23,7 @@
 2. Figure out the stride looking at correlation
 3. Run it ?
 
-See the file [[file:checkparams.jl]] for these two steps. 
+See the file [[file:scripts/checkparams.jl]] for these two steps. 
 
 * Reproducing figure 4 from the SCMC paper
 ** Target figures
