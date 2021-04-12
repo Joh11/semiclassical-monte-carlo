@@ -5,7 +5,6 @@ using StaticArrays
 using Random
 using LinearAlgebra
 using FFTW
-using Printf
 using Statistics
 using StaticArrays
 
