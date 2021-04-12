@@ -8,7 +8,7 @@ using FFTW
 using Statistics
 using StaticArrays
 
-export loadhamiltonian, energy, deltaenergy, magnetization
+export loadhamiltonian, randomstate, energy, deltaenergy, magnetization
 export mcstep!, simulate, structuralfactor
 
 include("hamiltonian.jl")
