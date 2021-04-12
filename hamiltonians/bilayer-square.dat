@@ -1,0 +1,26 @@
+# bilayer square lattice used in the paper
+# Dynamical structure factors and excitation modes of the bilayer Heisenberg model
+# https://arxiv.org/pdf/1508.07816.pdf
+# lattice vectors
+1 0
+0 1
+# number of sites per unit cell
+2
+# sites coords (frac)
+# both are the same since we only deal with k_z = 0 momentum subspace
+0 0
+0 0
+# format: s1 i j s2 couplingIndex
+# intralayer top
+0 -1  0 0 0
+0  1  0 0 0
+0  0 -1 0 0
+0  0  1 0 0
+# intralayer bottom
+1 -1  0 1 0
+1  1  0 1 0
+1  0 -1 1 0
+1  0  1 1 0
+# interlayer
+1 0 0 0 1
+0 0 0 1 1

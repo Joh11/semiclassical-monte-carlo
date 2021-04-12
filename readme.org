@@ -139,4 +139,11 @@ The code is too slow to reproduce exactly the paper's results.
 - before :: L = 40: 2.9622924454 seconds (10 samples)
 - localfield loop + unpack :: L = 40: 1.0795456017 seconds (10 samples)
 
-Try 
+* Testing the energy resolved structure factor
+Trying to reproduce this paper: [[https://arxiv.org/pdf/1508.07816.pdf][Dynamical structure factors and
+excitation modes of the bilayer Heisenberg model]].
+
+** Issue with the definition of the kpoints
+They use 3D momenta, with the z component discretized to be 0 or
+\(\pi\). For simplicity, I will only reproduce the \(k_z = 0\) band
+diagrams.
