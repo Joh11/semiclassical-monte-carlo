@@ -8,10 +8,6 @@ using Statistics
 using HDF5: h5write, h5read
 using StaticArrays
 
-push!(LOAD_PATH, pwd())
-
-using HamiltonianMod
-
 const Vec3 = SVector{3, Float64}
 
 "Returns a random unit vector in 3D"

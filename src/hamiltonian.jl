@@ -1,9 +1,5 @@
-module HamiltonianMod
-
 using LinearAlgebra
 using StaticArrays
-
-export loadparamhamiltonian, loadhamiltonian, localfield, energy, deltaenergy, reciprocallattice, wrapindex
 
 @inline function wrapindex(i, L)
     1 + mod(i - 1, L)
@@ -141,6 +137,4 @@ function reciprocallattice(lattice)
     ret[:, 2] = b2
     
     (2π / det) * ret
-end
-
 end
