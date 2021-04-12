@@ -130,7 +130,7 @@ end
         Practically, takes a (3, Ns, L, L, ndt) array, and returns a (3, L, L,
         ndt) array.  
         """
-function ftspacespins(H, vs, dt)
+function ftspacespins(H, vs)
     Ns, L = size(vs)[1:2]
     ndt = size(vs)[4]
 
@@ -186,7 +186,7 @@ function structuralfactor(H, vs, dt)
     Ns, L = size(vs)[1:2]
     ndt = size(vs)[4]
 
-    sq = ftspacespins(H, vs, dt)
+    sq = ftspacespins(H, vs)
 
     # now build the structural factor itself
     # s_-Q(0)
