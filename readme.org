@@ -2,11 +2,9 @@
 #+startup: content
 
 * Files
-- [[file:HamiltonianMod.jl]]: module to open the hamiltonian file format
-- [[file:scmc.jl]]: the implementation itself
-- [[file:tests.jl]]: unit tests
-- [[file:solve-rk8.jl]]: used to plot the (non)conservation of energy and
-  M with time
+- [[file:src/HamiltonianMod.jl]]: module to open the hamiltonian file format
+- [[file:src/scmc.jl]]: the implementation itself
+- [[file:tests/tests.jl]]: unit tests
   
 * How it works
 1. [X] Generate a random state vector
