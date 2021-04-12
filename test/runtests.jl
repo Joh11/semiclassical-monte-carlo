@@ -1,5 +1,4 @@
-include("../src/scmc.jl")
-
+using SCMC
 using Test
 using DifferentialEquations
 
