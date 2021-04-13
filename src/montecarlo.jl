@@ -1,3 +1,5 @@
+using DifferentialEquations
+
 const Vec3 = SVector{3, Float64}
 
 "Returns a random unit vector in 3D"
@@ -54,72 +56,40 @@ end
 
 "Build the function representing the time derivative of v"
 function makef(H)
-    # give it a name for the profiler
-    function(v, ret)
+    function f(dv, v, p=nothing, t=nothing)
         Ns = size(v)[1]
         L = size(v)[2]
-        
         for j in 1:L
             for i in 1:L
                 for s in 1:Ns
-                    @views ret[s, i, j] = localfield(H, v, i, j, s) × v[s, i, j]
+                    @views dv[s, i, j] = localfield(H, v, i, j, s) × v[s, i, j]
                 end
             end
         end
     end
 end
 
-"Use an 8th order Runge-Kutta scheme to advance dt in time the given state"
-function dormandprince(f!, v, dt, ks)
-    a21 = 1/5
-    a31, a32 = [3/40, 9/40]
-    a41, a42, a43 = [44/45, -56/15, 32/9]
-    a51, a52, a53, a54 = [19372/6561, -25360/2187, 64448/6561, -212/729]
-    a61, a62, a63, a64, a65 = [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656]
-    a71, a72, a73, a74, a75, a76 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]
-
-    @views begin
-        f!(v, ks[1])
-        f!((@. v + dt * (a21 * ks[1])), ks[2])
-        f!((@. v + dt * (a31 * ks[1] + a32 * ks[2])), ks[3])
-        f!((@. v + dt * (a41 * ks[1] + a42 * ks[2] + a43 * ks[3])), ks[4])
-        f!((@. v + dt * (a51 * ks[1] + a52 * ks[2] + a53 * ks[3] + a54 * ks[4])), ks[5])
-        f!((@. v + dt * (a61 * ks[1] + a62 * ks[2] + a63 * ks[3] + a64 * ks[4] + a65 * ks[5])), ks[6])
-        f!((@. v + dt * (a71 * ks[1] + a72 * ks[2] + a73 * ks[3] + a74 * ks[4] + a75 * ks[5] + a76 * ks[6])), ks[7])
-
-        # First solution
-        b1, b2, b3, b4, b5, b6, b7 = [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0]
-        @. v + dt * (b1 * ks[1] + b2 * ks[2] + b3 * ks[3] + b4 * ks[4] + b5 * ks[5] + b6 * ks[6] + b7 * ks[7])
-    end
-    # Second solution
-    # b1, b2, b3, b4, b5, b6, b7 = [5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40]
-    # ret2 = v + dt * (b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6 + b7 * k7)
-end
-
-"""Same as the other method, except that this time the result vector
-    is not allocated """
-function simulate(H, v, vs, dt, ndt; stride=1)
-    f! = makef(H)
-    L = size(v)[3]
-    ks = [similar(v) for i = 1:7]
-    for i in 1:ndt-1
-        # println("$i / $ndt")
-        vs[:, :, :, i] = v
-        for n = 1:stride
-            @views v = dormandprince(f!, v, dt, ks)
-        end
-    end
-    vs[:, :, :, end] = v
-    
-    vs
-end
-
 """Advances the state v in time using the semiclassical
         equations. Returns a (3, Ns, L, L, ndt) vector. """
-function simulate(H, v, dt, ndt; stride=1)
-    Ns, L = size(v)[1:2]
-    vs = zeros(Vec3, H.Ns, L, L, ndt)
-    simulate(H, v, vs, dt, ndt; stride=stride)
+function simulate(H, v, tmax)
+    # define the problem
+    f = makef(H)
+    prob = ODEProblem(f, v, (0, tmax))
+
+    # solve it
+    # save every second
+    sol = solve(prob, saveat=10, progress=true)
+
+    # put it in a format usable by the rest of the code
+    nt = length(sol)
+    L = size(v)[2]
+    ret = zeros(Vec3, H.Ns, L, L, nt)
+
+    for n in eachindex(sol.u)
+        @views ret[:, :, :, n] = sol.u[n]
+    end
+    
+    ret
 end
 
 @doc raw"""Computes the space FT of the given time
