@@ -1,9 +1,8 @@
-include("../src/scmc.jl")
-
 using Plots
 using Base.Threads: @threads, threadid, nthreads
 using LaTeXStrings
-using HDF5: h5write, h5open, attributes
+using HDF5
+using SemiClassicalMonteCarlo
 
 @show nthreads()
 
@@ -59,12 +58,85 @@ h5open(output, "w") do f
     write(f, "Sqt", Sqt)
 end
 
+# load data
+Sqt = h5read(output, "Sqt")
+
 # plot data
 plot(xlabel=L"t",
      ylabel=L"S(q, t) / S(q, 0)")
-for ik = 1:nk
+for ik = 1:2:2*nk
     q = sqrt(3) / L * (ik - 1)
-    plot!(ts, real.(Sqt[ik, ik, :]), label="|q|=$(round(q; digits=3))")
+    plot!(ts, real.(Sqt[1 * ik, ik, :]), label="|q|=$(round(q; digits=3))")
 end
+xlims!(0, 1000)
 ylims!(-0.1, 1.1)
+
 savefig("fig4.png")
+
+# fig. 4 b
+function linreg(x, y)
+    n = length(x)
+    A = ones(n, 2)
+    A[:, 1] = x
+
+    A \ y
+end
+
+function propreg(x, y)
+    n = length(x)
+    A = ones(n, 1)
+    A[:, 1] = x
+
+    (A \ y)[1]
+end
+
+# compute tau
+tau = zeros(L)
+for k in 1:L
+    y = real.(Sqt[k, k, :])
+    x = -ts
+    # remove negative entries
+    x = x[y .> 0.05]
+    y = y[y .> 0.05]
+    
+    tau[k] = propreg(x, log.(y))[1]
+end
+
+x = sqrt(3) / L * (1:L-1)
+y = tau[2:end]
+
+x = x[y .> 0]
+y = y[y .> 0]
+scatter(1 / sqrt(2) * x, y,
+        label=nothing,
+        xlabel=L"|q|",
+        ylabel=L"1 / \tau_d J",
+        xaxis=:log, yaxis=:log,
+        minorticks=9
+        )
+xlims!(0.01, 1)
+ylims!(0.001, 1)
+
+# compute the fit itself
+x = log.(x)
+y = log.(y)
+a, b = linreg(x, y)
+plot!(exp.(x), exp.(a * x .+ b),
+      label="test",
+      xaxis=:log, yaxis=:log)
+
+
+
+
+# plot each fit individually
+k = 15
+y = real.(Sqt[k, k, :])
+x = ts
+# plot(x, y)
+
+x = x[y .> 0.05]
+y = y[y .> 0.05]
+scatter(x, log.(y))
+
+tau = propreg(x, log.(y))
+scatter!(x, (tau * x))
