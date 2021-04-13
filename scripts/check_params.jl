@@ -1,32 +1,29 @@
 using LaTeXStrings
 using Plots
+using LinearAlgebra
+using SemiClassicalMonteCarlo
+const SCMC = SemiClassicalMonteCarlo
 
-include("../src/scmc.jl")
-
-"Plot the energy and magnetization to determine the optimal number of thermalization steps"
-function thermalization(H, L, T)
-    v = randomstate(H.Ns, L)
-
-    n = 50
+"Plot the given observable to determine the optimal number of thermalization steps"
+function thermalization(H, L, T, observable, name="Observable")
+    n = 500
     stride = 1
     
-    E, m = zeros(n), zeros(3, n)
+    v = randomstate(H.Ns, L)
+    Obs = zeros(n)
 
     println("1 / $n")
-    E[1] = energy(H, v)
-    m[:, 1] = magnetization(v)
-    
+    Obs[1] = observable(v)
+
     for i = 2:n
         println("$i / $n")
         mcstep!(H, v, T, stride)
-        E[i] = energy(H, v)
-        m[:, i] = magnetization(v)
+        Obs[i] = observable(v)
     end
 
-    plot(E;
-         label = "E",
-         xlabel="number of MC steps / $stride")
-    plot!(transpose(m), label=[L"m_1" L"m_2" L"m_3"])
+    display(plot(Obs;
+                 label = name,
+                 xlabel="number of MC steps / $stride"))
 end
 
 "Plot the correlation between samples"
@@ -53,12 +50,23 @@ function correlation(H, L, T; thermal=0)
 end
 
 # Load the hamiltonian
-H = loadhamiltonian("../hamiltonians/bilayer-square.dat", [1])
-L = 20
-T = 0.02
+const H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+const L = 144
+const T = 0.17
+
+observable = function(v)
+    # arbitrary points
+    i1, j1 = 10, 10, 1
+    i2, j2 = 1, 10, 2
+    
+    vs = reshape(v, (H.Ns, L, L, 1))
+    sq = reshape(SCMC.ftspacespins(H, vs), (3, L, L))
+
+    abs(sq[:, i1, j1] ⋅ sq[:, i2, j2])
+end
 
 # 1. check the thermalization step
-thermalization(H, L, T)
+thermalization(H, L, T, observable, "structure factor")
 # we can see that 20 steps is enough
 
 # 2. check the decorrelation steps between two samples
