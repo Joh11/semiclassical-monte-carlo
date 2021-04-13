@@ -1,8 +1,7 @@
-include("../src/scmc.jl")
-
 using Plots
 using Base.Threads: @threads, threadid, nthreads
 using HDF5: h5write, h5open, attributes
+using SemiClassicalMonteCarlo
 
 const gs = [0.1, 1, 2, 2.522, 3]
 
