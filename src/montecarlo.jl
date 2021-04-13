@@ -71,14 +71,17 @@ end
 
 """Advances the state v in time using the semiclassical
         equations. Returns a (3, Ns, L, L, ndt) vector. """
-function simulate(H, v, tmax)
+function simulate(H, v, dt, nt)
     # define the problem
+    tmax = Float64(dt * (nt - 1))
     f = makef(H)
     prob = ODEProblem(f, v, (0, tmax))
 
     # solve it
     # save every second
-    sol = solve(prob, saveat=10, progress=true)
+    sol = solve(prob, saveat=dt,
+                progress=true,
+                reltol=1e-5)
 
     # put it in a format usable by the rest of the code
     nt = length(sol)

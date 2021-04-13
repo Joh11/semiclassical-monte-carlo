@@ -255,7 +255,7 @@ using Statistics
         @test all(ms .≈ m0)
 
         # check FT of spins
-        sq = SCMC.ftspacespins(H, vs, dt)
+        sq = SCMC.ftspacespins(H, vs)
         @test all(sq[:, 1, 1, :] .≈ m0)
     end
 end
