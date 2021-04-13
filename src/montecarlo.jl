@@ -127,9 +127,8 @@ end
         ``\vec s_{\vec Q}(t) = \sum_{i, j, s}\vec S_{i, j, s}(t) 
         e^{-i (\vec R_{ij} + \vec r_s)\cdot \vec Q}``
 
-        Practically, takes a (3, Ns, L, L, ndt) array, and returns a (3, L, L,
-        ndt) array.  
-        """
+        Practically, takes a (Ns, L, L, ndt) array of Vec3, and
+        returns a (3, L, L, ndt) array.  """
 function ftspacespins(H, vs)
     Ns, L = size(vs)[1:2]
     ndt = size(vs)[4]
