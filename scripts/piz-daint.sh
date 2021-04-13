@@ -16,4 +16,6 @@ module load Julia
 module load JuliaExtensions
 
 export JULIA_NUM_THREADS=72
+
+echo running julia ...
 srun julia --project=.. -O3 --check-bounds=no fig4.jl
