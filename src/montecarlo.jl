@@ -154,7 +154,7 @@ end
         Practically, takes a (3, Ns, L, L, ndt) array, and returns a (L, L,
         ndt) array.
         """
-function structuralfactor(H, vs, dt)
+function structuralfactor(H, vs)
     Ns, L = size(vs)[1:2]
     ndt = size(vs)[4]
 

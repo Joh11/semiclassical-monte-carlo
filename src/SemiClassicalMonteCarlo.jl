@@ -9,7 +9,7 @@ using Statistics
 using StaticArrays
 
 export loadhamiltonian, randomstate, energy, deltaenergy, magnetization
-export mcstep!, simulate, structuralfactor
+export mcstep!, simulate, structuralfactor, frequencystructuralfactor
 
 include("hamiltonian.jl")
 include("montecarlo.jl")

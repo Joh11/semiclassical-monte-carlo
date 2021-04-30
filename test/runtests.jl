@@ -171,7 +171,7 @@ using Statistics
         @test decay[end] ≈ 0 atol=4e-2
         
         # 2. check the structure factor
-        Sqt = mapreduce(vs -> structuralfactor(H, vs, dt), +, samples)
+        Sqt = mapreduce(vs -> structuralfactor(H, vs), +, samples)
         Sqt /= nsamples
 
         # nsamples | max(imag.(Sqt[2, 1, :]))
@@ -212,7 +212,7 @@ using Statistics
         end
         samples = map(runone, 1:nsamples)
 
-        Sqts = map(vs -> structuralfactor(H, vs, dt), samples)
+        Sqts = map(vs -> structuralfactor(H, vs), samples)
 
         norm_Sqt_ana = compute_norm_Sqt_ana(H, L)
 
