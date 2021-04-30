@@ -21,7 +21,7 @@ const nk = 7 # take the 7 first kpoints (h, h)
 
 const nsamples = nsamples_per_thread * nthreads()
 
-H = loadhamiltonian("hamiltonians/kagome.dat", [1])
+H = loadhamiltonian("../hamiltonians/kagome.dat", [1])
 Sqt = zeros(Complex{Float64}, L, L, nt)
 
 @threads for n = 1:nthreads()

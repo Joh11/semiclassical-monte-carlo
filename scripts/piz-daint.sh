@@ -1,9 +1,9 @@
 #!/bin/bash -l
 #SBATCH --job-name="scmc"
-#SBATCH --time=08:00:00
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=cscsci
+#SBATCH --partition=debug
 #SBATCH --constraint=mc
 #SBATCH --account=mr27
 #SBATCH --cpus-per-task=36
@@ -16,4 +16,6 @@ module load Julia
 module load JuliaExtensions
 
 export JULIA_NUM_THREADS=72
-srun julia -O3 --check-bounds=no fig4.jl
+
+echo running julia ...
+srun julia --project=.. -O3 --check-bounds=no fig4.jl
