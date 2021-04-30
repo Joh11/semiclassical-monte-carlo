@@ -1,6 +1,7 @@
 # bilayer square lattice used in the paper
 # Dynamical structure factors and excitation modes of the bilayer Heisenberg model
 # https://arxiv.org/pdf/1508.07816.pdf
+# except we add NN and NNN intralayer interactions
 # lattice vectors
 1 0
 0 1
@@ -11,16 +12,26 @@
 0 0
 0 0
 # format: s1 i j s2 couplingIndex
-# intralayer top
+# NN intralayer top
 0 -1  0 0 0
 0  1  0 0 0
 0  0 -1 0 0
 0  0  1 0 0
-# intralayer bottom
+# NNN intralayer top
+0 -1 -1 0 1
+0 -1  1 0 1
+0  1 -1 0 1
+0  1  1 0 1
+# NN intralayer bottom
 1 -1  0 1 0
 1  1  0 1 0
 1  0 -1 1 0
 1  0  1 1 0
+# NNN intralayer bottom
+1 -1 -1 1 1
+1 -1  1 1 1
+1  1 -1 1 1
+1  1  1 1 1
 # interlayer
-1 0 0 0 1
-0 0 0 1 1
+1 0 0 0 2
+0 0 0 1 2
