@@ -170,46 +170,8 @@ end
 @doc raw"""Computes the (dynamical) frequency structural factor
         ``S(\vec Q, \omega)`` of the given time evolved state v. """
 function frequencystructuralfactor(H, vs, dt)
-    Sqt = structuralfactor(H, vs, dt)
+    Sqt = structuralfactor(H, vs)
     Sqω = fft(Sqt, 3)
 
     Sqω
-end
-
-# -----------------------------------------------------------------------------
-# Plotting stuff
-# -----------------------------------------------------------------------------
-
-function plotfrequencystructuralfactor(Sqω; lognorm=true)
-    L, ndt = size(Sqω)[2:3]
-    if L % 2 != 0
-        throw(DomainError("L should be even"))
-    end
-    
-    # take the mean if necessary
-    if ndims(Sqω) == 4
-        Sqω = reshape(mean(Sqω; dims=4), (L, L, ndt))
-    end
-    
-    l = Int(L // 2)
-    # build kpath
-    nkps = 3l+3
-    kpath = fill([], 3l+3)
-    kpath[1:l+1] = [[1, 1] .* i for i in 1:l+1] # Γ-M
-    kpath[l+2:2l+2] = [[l+1, l+1] .+ [0, -1] * i for i in 0:l] # M-X
-    kpath[2l+3:3l+3] = [[l+1, 1] .+ [-1, 0] * i for i in 0:l] # X-Γ
-
-    z = zeros(nkps, ndt)
-    for nk in 1:nkps
-        nx, ny = kpath[nk]
-        for nt in 1:ndt
-            if lognorm
-                z[nk, nt] = log10(1e-8 + abs(Sqω[nx, ny, nt]))
-            else
-                z[nk, nt] = abs(Sqω[nx, ny, nt])
-            end
-        end
-    end
-    # , ["Γ", "M", "X"]
-    heatmap(transpose(z); xticks=([1, 7, 13, 19], ["Γ", "M", "X", "Γ"])), z
 end
