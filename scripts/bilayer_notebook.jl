@@ -88,7 +88,7 @@ heatmap(real.(Sqomega[1:30, :]),
 	yticks=(T / 2π * Array(0:9), 0:9),
 	ylabel="ω",
 	aspect_ratio=31/30,
-	clims=(0, 1)
+	clims=(0, 1) # can be uncommented to fix the colorbar scale for all plots
 )
 
 # ╔═╡ e9d4e665-f8a0-4c7c-9554-47614f90a4e4
