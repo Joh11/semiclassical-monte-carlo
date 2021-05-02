@@ -37,6 +37,11 @@ begin
 	const nt = read(attributes(f)["nt"])
 	const dt = read(attributes(f)["dt"])
 	const T = nt * dt
+	Dict("L" => L,
+	"Ns" => Ns,
+	"nt" => nt,
+	"dt" => dt,
+	"T" => T)
 end
 
 # ╔═╡ 39fde87d-17f6-4757-8a9f-2c9b2a9f5d48
