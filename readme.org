@@ -156,3 +156,13 @@ Parameters to find:
 
 *** Find the optimal params
 (Do it for several \(g\) to be safe)
+
+* Plan for SKL
+** TODO Make sure the hamiltonian model is correct
+** Questions
+- was the classical MC already done for SKL ?
+- what is actually a dimerized phase
+- what should I save ?
+- why 2N bonds ? what is N ?
+- so no time evolution this time ?
+- large volume limit => which value of L ?

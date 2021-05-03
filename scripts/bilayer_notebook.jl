@@ -27,7 +27,7 @@ md"# Replicating the paper \"Dynamical structure factors and excitation modes of
 md"## Replicating figure 1, top row"
 
 # ╔═╡ 9922da8b-6883-4e48-add2-7da92a9ab1e5
-f = h5open("../bilayer-fig1-02.h5", "r") # load data file
+f = h5open("../data/bilayer-fig1.h5", "r") # load data file
 
 # ╔═╡ 0103eb95-d5cf-4988-a8d0-55154dd1d5aa
 # load all the variables
