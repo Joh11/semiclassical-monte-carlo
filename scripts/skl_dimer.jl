@@ -86,14 +86,16 @@ total_dimer = zeros(2Ns, length(Ts))
 total_dimer2 = zeros(12, 2Ns, length(Ts))
 
 @threads for n in 1:nchains
-    println("Starting for chain $n / $(nchains) ...")
+    println("Starting for chain $n / $nchains ...")
     
     v = randomstate(H.Ns, L)
     dimer = zeros(2Ns) # <D_i> for all i
     dimer2 = zeros(12, 2Ns) # <D_i D_j> for i in UC, all j
+    Di = zeros(12, L, L) # temporary variable for compute_dimers!
     
     for i in eachindex(Ts)
         T = Ts[i]
+        println("Starting T = $T for chain $n / $nchains")
         # reset variables
         dimer .= 0
         dimer2 .= 0
@@ -106,9 +108,10 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
 
         # sampling step
         for nsample = 1:nsamples_per_chain
+            println("$nsample / $nsamples_per_chain, T = $T (chain $n / $nchains)")
             mcstep!(H, v, T, stride)
             # save the measurements of interest
-            Di = compute_dimers(v)
+            compute_dimers!(v, L, Di)
             dimer += reshape(Di, :)
             dimer2 += reshape(@view Di[:, 1, 1], (12, 1)) .*  reshape(Di, (1, :))
         end
