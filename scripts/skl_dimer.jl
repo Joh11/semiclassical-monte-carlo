@@ -28,15 +28,15 @@ function compute_dimers!(v, L, dimer)
     for i = 1:L
         for j = 1:L
             # do this manually for now
-            dimer[1, i, j] = v[1, i, j] ⋅ v[6, i, wrapindex(j+1, L)]
-            dimer[2, i, j] = v[2, i, j] ⋅ v[6, i, wrapindex(j+1, L)]
+            dimer[1, i, j] = v[1, i, j] ⋅ v[6, i, SCMC.wrapindex(j+1, L)]
+            dimer[2, i, j] = v[2, i, j] ⋅ v[6, i, SCMC.wrapindex(j+1, L)]
             dimer[3, i, j] = v[1, i, j] ⋅ v[2, i, j]
             dimer[4, i, j] = v[1, i, j] ⋅ v[3, i, j]
             dimer[5, i, j] = v[1, i, j] ⋅ v[4, i, j]
             dimer[6, i, j] = v[2, i, j] ⋅ v[5, i, j]
-            dimer[7, i, j] = v[2, i, j] ⋅ v[3, wrapindex(i+1, L), j]
+            dimer[7, i, j] = v[2, i, j] ⋅ v[3, SCMC.wrapindex(i+1, L), j]
             dimer[8, i, j] = v[3, i, j] ⋅ v[4, i, j]
-            dimer[9, i, j] = v[5, i, j] ⋅ v[3, wrapindex(i+1, L), j]
+            dimer[9, i, j] = v[5, i, j] ⋅ v[3, SCMC.wrapindex(i+1, L), j]
             dimer[10, i, j] = v[4, i, j] ⋅ v[5, i, j]
             dimer[11, i, j] = v[4, i, j] ⋅ v[6, i, j]
             dimer[12, i, j] = v[5, i, j] ⋅ v[6, i, j]
