@@ -96,7 +96,7 @@ end
     ret
 end
 
-"Compute the energy per site of the given state"
+"Compute the energy of the given state"
 function energy(H, v)
     L = size(v)[3]
     # simply the sum of spin . local field
