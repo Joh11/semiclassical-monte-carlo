@@ -11,6 +11,7 @@ they each have the same number of samples).
 
 =#
 
+using LinearAlgebra
 using Base.Threads
 using HDF5
 using SemiClassicalMonteCarlo
@@ -113,7 +114,7 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
             # save the measurements of interest
             compute_dimers!(v, L, Di)
             dimer += reshape(Di, :)
-            dimer2 += reshape(@view Di[:, 1, 1], (12, 1)) .*  reshape(Di, (1, :))
+            @views dimer2 += reshape(Di[:, 1, 1], (12, 1)) .*  reshape(Di, (1, :))
         end
 
         # now that everything is sampled, average
@@ -144,8 +145,8 @@ h5open(output, "w") do f
         T = Ts[n]
         group = create_group(f, "$n")
         group["T"] = T
-        group["dimer"] = @view total_dimer[:, n]
-        group["dimer2"] = @view total_dimer2[:, :, n]
+        @views group["dimer"] = total_dimer[:, n]
+        @views group["dimer2"] = total_dimer2[:, :, n]
     end
 end
 
