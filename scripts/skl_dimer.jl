@@ -123,7 +123,7 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
 
         # and append to the total results (for all chains)
         total_dimer[:, i] += dimer
-        total_dimer2[:, i] += dimer2
+        total_dimer2[:, :, i] += dimer2
     end
 end
 
