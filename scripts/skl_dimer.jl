@@ -85,6 +85,7 @@ const Ns = 6 * L^2 # number of sites in total
 
 total_dimer = zeros(2Ns, length(Ts))
 total_dimer2 = zeros(12, 2Ns, length(Ts))
+total_energy = zeros(length(Ts))
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
@@ -92,6 +93,7 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
     v = randomstate(H.Ns, L)
     dimer = zeros(2Ns) # <D_i> for all i
     dimer2 = zeros(12, 2Ns) # <D_i D_j> for i in UC, all j
+    E = 0
     Di = zeros(12, L, L) # temporary variable for compute_dimers!
     
     for i in eachindex(Ts)
@@ -100,6 +102,7 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
         # reset variables
         dimer .= 0
         dimer2 .= 0
+        E = 0
         # thermalization step
         if i == 1 # hard the first time
             mcstep!(H, v, T, p["thermal_first"])
@@ -115,21 +118,25 @@ total_dimer2 = zeros(12, 2Ns, length(Ts))
             compute_dimers!(v, L, Di)
             dimer += reshape(Di, :)
             @views dimer2 += reshape(Di[:, 1, 1], (12, 1)) .*  reshape(Di, (1, :))
+            E += energy(H, v)
         end
 
         # now that everything is sampled, average
         dimer /= nsamples_per_chain
         dimer2 /= nsamples_per_chain
+        E /= nsamples_per_chain
 
         # and append to the total results (for all chains)
         total_dimer[:, i] += dimer
         total_dimer2[:, :, i] += dimer2
+        total_energy[i] += E
     end
 end
 
 # average over all chains
 total_dimer /= nchains
 total_dimer2 /= nchains
+total_energy /= nchains
 
 # Saving
 # ======
@@ -147,6 +154,7 @@ h5open(output, "w") do f
         group["T"] = T
         @views group["dimer"] = total_dimer[:, n]
         @views group["dimer2"] = total_dimer2[:, :, n]
+        group["E"] = total_energy[n]
     end
 end
 
