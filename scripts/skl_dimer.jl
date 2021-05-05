@@ -25,32 +25,24 @@ function logrange(x1, x2, n)
 end
 
 "Inplace version"
-function compute_dimers!(v, L, dimer)
+function compute_dimers!(v, L, bonds, dimer)
     for i = 1:L
         for j = 1:L
-            # do this manually for now
-            dimer[1, i, j] = v[1, i, j] ⋅ v[6, i, SCMC.wrapindex(j+1, L)]
-            dimer[2, i, j] = v[2, i, j] ⋅ v[6, i, SCMC.wrapindex(j+1, L)]
-            dimer[3, i, j] = v[1, i, j] ⋅ v[2, i, j]
-            dimer[4, i, j] = v[1, i, j] ⋅ v[3, i, j]
-            dimer[5, i, j] = v[1, i, j] ⋅ v[4, i, j]
-            dimer[6, i, j] = v[2, i, j] ⋅ v[5, i, j]
-            dimer[7, i, j] = v[2, i, j] ⋅ v[3, SCMC.wrapindex(i+1, L), j]
-            dimer[8, i, j] = v[3, i, j] ⋅ v[4, i, j]
-            dimer[9, i, j] = v[5, i, j] ⋅ v[3, SCMC.wrapindex(i+1, L), j]
-            dimer[10, i, j] = v[4, i, j] ⋅ v[5, i, j]
-            dimer[11, i, j] = v[4, i, j] ⋅ v[6, i, j]
-            dimer[12, i, j] = v[5, i, j] ⋅ v[6, i, j]
+            for (n, bond) in enumerate(bonds)
+                dimer[n, i, j] = v[bond.a.index, i, j] ⋅ v[bond.b.index,
+                                                           SCMC.wrapindex(i + bond.b.i, L),
+                                                           SCMC.wrapindex(j + bond.b.j, L)]
+            end
         end
     end
 end
 
 """Compute the dimer operators D_i for each bond of each unit cell. 
 Returns a (12, L, L) array of floats. """
-function compute_dimers(v)
+function compute_dimers(v, H)
     L = size(v, 2)
     dimer = zeros(12, L, L)
-    compute_dimers!(v, L, dimer)
+    compute_dimers!(v, L, bonds(H), dimer)
     dimer
 end
 
@@ -73,14 +65,15 @@ const p = Dict("comment" => "first try, mostly to find where is Tc",
                "J2" => 1,
                "J3" => 1,
                "L" => 10,
-               "Ts" => logrange(5e-3, 0.1, 10),
-               "thermal_first" => 100_000,
+               "Ts" => [5e-3]#=logrange(5e-3, 0.1, 10)=#,
+               "thermal_first" => 10_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
                "nsamples_per_chain" => 1000,
                "stride" => 500)
-output = "skl_dimer_long.h5"
-H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
+output = "skl_dimer_test_bond.h5"
+const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
+const bs = bonds(H)
 
 # variables often used have an alias
 const L = p["L"]
@@ -126,7 +119,7 @@ total_energy = zeros(length(Ts))
             println("$nsample / $nsamples_per_chain, T = $T (chain $n / $nchains)")
             mcstep!(H, v, T, stride)
             # save the measurements of interest
-            compute_dimers!(v, L, Di)
+            compute_dimers!(v, L, bs, Di)
             dimer += reshape(Di, :)
             dimer2 += compute_dimer2(Di, L)
             E += energy(H, v)
