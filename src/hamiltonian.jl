@@ -142,7 +142,7 @@ struct Site
     i :: Int
     j :: Int
     # can be outside of [0,1]² (if i, j != 0)
-    frac_pos :: Array{Float64, 1}
+    pos :: Array{Float64, 1}
 end
 
 struct Bond

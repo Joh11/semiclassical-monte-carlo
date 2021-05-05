@@ -20,10 +20,15 @@ begin
 	using Plots
 	using LaTeXStrings
 	using Statistics
+	using Revise
+	
+	push!(LOAD_PATH, "..")
+	using SemiClassicalMonteCarlo
+	const SCMC = SemiClassicalMonteCarlo
 end
 
 # ╔═╡ 79fb766c-3537-4c4b-aacc-355ab293d14c
-f = h5open("../skl_dimer_long.h5", "r")
+f = h5open("../skl_dimer_test_bond.h5", "r")
 
 # ╔═╡ 552ccc21-bf70-40b6-be18-c219b01d48c3
 # load all the variables
@@ -31,6 +36,11 @@ begin
 	const L = read(attributes(f)["L"])
 	const Ns = 12L^2
 	const Ts = read(attributes(f)["Ts"])
+	const J1 = read(attributes(f)["J1"])
+	const J2 = read(attributes(f)["J2"])
+	const J3 = read(attributes(f)["J3"])
+	
+	const H = loadhamiltonian("../hamiltonians/skl.dat", [J1, J2, J3])
 end
 
 # ╔═╡ b1283663-56c9-4c12-a6d0-821ff7f50cc0
@@ -62,48 +72,42 @@ const corr = dimer2[ref_bond, :] - dimer[ref_bond] * dimer
 const E = read(f["$Tindex/E"])
 
 # ╔═╡ bc3e3d14-040e-4b77-b376-0c84afe378d5
-"Takes a (12, L, L) array of bond strengths"
-function plot_diagram(bonds)
-	L = size(bonds, 2)
+"Takes an Hamiltonian, and a (12, L, L) array of bond strengths"
+function plot_diagram(H::SCMC.Hamiltonian, values)
+	bs = bonds(H)
+	L = size(values, 2)
 	plot()
 	
-	function draw(x1, y1, x2, y2, val; color=:auto)
+	function draw(r1, r2, val; color=:auto)
+		x1, y1 = r1
+		x2, y2 = r2
+		
 		plot!([x1, x2], [y1, y2],
 			legend=nothing,
 			color=color != :auto ? color : (val > 0 ? :red : :blue),
-			linewidth=abs(val))
+			linewidth=10abs(val))
 	end
 	
 	for x0 = 0:L-1
 		for y0 = 0:L-1
-			draw(x0+.25, y0+.75, x0+.5, y0+1, bonds[1, x0+1, y0+1])
-			draw(x0+.5, y0+1, x0+.75, y0+.75, bonds[2, x0+1, y0+1])
-			draw(x0+.25, y0+.75, x0+.75, y0+.75, bonds[3, x0+1, y0+1])
-			draw(x0, y0+.5, x0+.25, y0+.75, bonds[4, x0+1, y0+1])
-			draw(x0+.25, y0+.75, x0+.25, y0+.25, bonds[5, x0+1, y0+1])
-			draw(x0+.75, y0+.75, x0+.75, y0+.25, bonds[6, x0+1, y0+1])
-			draw(x0+.75, y0+.75, x0+1, y0+.5, bonds[7, x0+1, y0+1])
-			draw(x0, y0+.5, x0+.25, y0+.25, bonds[8, x0+1, y0+1])
-			draw(x0+.75, y0+.25, x0+1, y0+.5, bonds[9, x0+1, y0+1])
-			draw(x0+.25, y0+.25, x0+.75, y0+.25, bonds[10, x0+1, y0+1])
-			draw(x0+.25, y0+.25, x0+.5, y0, bonds[11, x0+1, y0+1])
-			draw(x0+.5, y0, x0+.75, y0+.25, bonds[12, x0+1, y0+1])
+			for (n, bond) in enumerate(bs)
+				draw(bond.a.pos + [x0, y0], 
+					bond.b.pos + [x0, y0],
+					values[n, x0+1, y0+1])
+			end
 		end
 	end
 	
 	# reference bond
 	# TODO draw it automatically
-	draw(.25, .75, .5, 1, bonds[ref_bond, 1, 1]; color=:black)
+	draw(bs[ref_bond].a.pos, bs[ref_bond].b.pos, values[ref_bond, 1, 1]; color=:black)
 	
 	plot!(aspect_ratio=:equal,
 			title="correlation for T=$(round(T; digits=3))") # to make sure it renders
 end
 
-# ╔═╡ 59b79a21-a592-46b5-9719-9a8a39f4a76e
-
-
 # ╔═╡ 162831b0-73d0-46c6-95fc-2317fd961cf2
-plot_diagram(reshape(corr, (12, L, L)) / corr[ref_bond])
+plot_diagram(H, reshape(corr, (12, L, L)) / corr[ref_bond])
 
 # ╔═╡ a31d8d78-baa8-469d-9d5e-7c9401ca320f
 const self_corr = [dimer2[i, i] for i=1:12] - dimer[1:12] .^2
@@ -136,7 +140,6 @@ heatmap(reshape(corr, (12, L, L))[1, :, :],
 # ╠═314899e2-75a2-42a8-864c-76d5a3f561c9
 # ╠═3e6bb03a-723a-457c-8f78-ef5923dc9a5e
 # ╠═bc3e3d14-040e-4b77-b376-0c84afe378d5
-# ╠═59b79a21-a592-46b5-9719-9a8a39f4a76e
 # ╠═162831b0-73d0-46c6-95fc-2317fd961cf2
 # ╠═a31d8d78-baa8-469d-9d5e-7c9401ca320f
 # ╠═73a122b0-0246-4a89-9e54-b01d34b962eb
