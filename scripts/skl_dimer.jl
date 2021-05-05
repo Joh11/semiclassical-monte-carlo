@@ -48,10 +48,21 @@ end
 """Compute the dimer operators D_i for each bond of each unit cell. 
 Returns a (12, L, L) array of floats. """
 function compute_dimers(v)
-    L = size(v)[2]
+    L = size(v, 2)
     dimer = zeros(12, L, L)
     compute_dimers!(v, L, dimer)
     dimer
+end
+
+"Takes a (12, L, L) array as input"
+function compute_dimer2(dimer, L)
+    dimer2 = zeros(12, 12L^2)
+
+    for i = 1:12L^2
+        @views dimer2[:, i] = dimer[:, 1, 1] .* dimer[i]
+    end
+    
+    dimer2
 end
 
 # Params
@@ -63,12 +74,12 @@ const p = Dict("comment" => "first try, mostly to find where is Tc",
                "J3" => 1,
                "L" => 10,
                "Ts" => logrange(5e-3, 0.1, 10),
-               "thermal_first" => 10_000,
-               "thermal" => 1_000,
-               "nchains" => 10,
-               "nsamples_per_chain" => 100,
-               "stride" => 50)
-output = "skl_dimer.h5"
+               "thermal_first" => 100_000,
+               "thermal" => 10_000,
+               "nchains" => 8, # because I have 8 threads on my laptop
+               "nsamples_per_chain" => 1000,
+               "stride" => 500)
+output = "skl_dimer_long.h5"
 H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
@@ -78,7 +89,7 @@ const Ts = p["Ts"]
 const nsamples_per_chain = p["nsamples_per_chain"]
 const stride = p["stride"]
 
-const Ns = 6 * L^2 # number of sites in total
+const Ns = 6L^2 # number of sites in total
 
 # Running the simulation
 # ======================
@@ -117,7 +128,7 @@ total_energy = zeros(length(Ts))
             # save the measurements of interest
             compute_dimers!(v, L, Di)
             dimer += reshape(Di, :)
-            @views dimer2 += reshape(Di[:, 1, 1], (12, 1)) .*  reshape(Di, (1, :))
+            dimer2 += compute_dimer2(Di, L)
             E += energy(H, v)
         end
 
@@ -137,6 +148,8 @@ end
 total_dimer /= nchains
 total_dimer2 /= nchains
 total_energy /= nchains
+
+
 
 # Saving
 # ======
