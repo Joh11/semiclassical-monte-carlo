@@ -60,18 +60,18 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "first try, mostly to find where is Tc",
+const p = Dict("comment" => "A big one to make sure everything has converged",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
                "L" => 10,
-               "Ts" => [5e-3]#=logrange(5e-3, 0.1, 10)=#,
-               "thermal_first" => 10_000,
+               "Ts" => logrange(5e-3, 0.1, 10),
+               "thermal_first" => 100_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
-               "nsamples_per_chain" => 1000,
+               "nsamples_per_chain" => 5000,
                "stride" => 500)
-output = "skl_dimer_test_bond.h5"
+output = "skl_dimer_long2.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const bs = bonds(H)
 
