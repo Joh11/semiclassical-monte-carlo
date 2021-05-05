@@ -135,3 +135,39 @@ function reciprocallattice(lattice)
     
     (2π / det) * ret
 end
+
+struct Site
+    index :: Int
+    # unit cell indices
+    i :: Int
+    j :: Int
+    # can be outside of [0,1]² (if i, j != 0)
+    frac_pos :: Array{Float64, 1}
+end
+
+struct Bond
+    a :: Site
+    b :: Site
+    strength :: Float64
+end
+
+"Returns a list of the bonds in the hamiltonian"
+function bonds(H::Hamiltonian)
+    ret = Bond[]
+
+    # only take bonds from a to b > a
+    for a in eachindex(H.couplings)
+        siteA = Site(a, 0, 0, H.rs[:, a])
+        
+        for (Δi, Δj, b, strength) in H.couplings[a]
+            if b <= a # skip to avoid double counting
+                continue
+            end
+            siteB = Site(b, Δi, Δj, H.rs[:, b] + H.lattice * [Δi, Δj])
+
+            push!(ret, Bond(siteA, siteB, strength))
+        end
+    end
+        
+    ret
+end

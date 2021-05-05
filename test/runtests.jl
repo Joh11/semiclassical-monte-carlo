@@ -19,7 +19,6 @@ using Statistics
         @test all(map(norm, v) .≈ 1)
     end
 
-    
     @testset "rec lattice" begin
         lattice = rand(2, 2)
         rec = SCMC.reciprocallattice(lattice)
@@ -59,6 +58,13 @@ using Statistics
         @test check_symmetryp(H)
     end
 
+    @testset "bonds" begin
+        H = loadhamiltonian("../hamiltonians/skl.dat", [1, 1, 1])
+        # there should be 12 bonds
+        x = bonds(H)
+        @test length(x) == 12
+    end
+    
     @testset "delta energy" begin
         L = 144
         H = loadhamiltonian("../hamiltonians/square.dat", [1, 2])
