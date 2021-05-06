@@ -158,9 +158,11 @@ Parameters to find:
 (Do it for several \(g\) to be safe)
 
 * Dimer order SKL
-** TODO Integrate the bonds properly in the hamiltonian
-use a method =bonds= that takes the hamiltonian and returns a list of
-bonds.
 
-- a bond: a struct of two sites
-- a site: a struct with the site index, and the (frac) pos
+* Dynamical structure factor SKL
+Found in skl_factor.jl, skl_factor_notebook.jl. 
+** Find the params ?
+- Use the nsample scan from dimer to choose the number of samples
+- Use the same T scan
+- Use the same dt / nt as before with bilayer
+- Save both St and Somega
