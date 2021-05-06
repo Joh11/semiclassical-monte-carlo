@@ -162,7 +162,8 @@ Parameters to find:
 * Dynamical structure factor SKL
 Found in skl_factor.jl, skl_factor_notebook.jl. 
 ** Find the params ?
-- Use the nsample scan from dimer to choose the number of samples
-- Use the same T scan
-- Use the same dt / nt as before with bilayer
+- Use the nsample scan from dimer to choose the number of samples :: 30K
+- Use the same T scan :: =logrange(5e-3, 0.1, 10)=
+- Use the same dt / nt as before with bilayer :: =nt, dt=100, 0.1=
 - Save both St and Somega
+- L = 10 as before
