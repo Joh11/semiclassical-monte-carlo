@@ -135,8 +135,8 @@ h5open(output, "w") do f
         T = Ts[n]
         group = create_group(f, "$n")
         group["T"] = T
-        @views group["St"] = total_St[:, n]
-        @views group["Somega"] = total_Somega[:, :, n]
+        @views group["St"] = total_St[:, :, :, n]
+        @views group["Somega"] = total_Somega[:, :, :, n]
         group["E"] = total_energy[n]
     end
 end
