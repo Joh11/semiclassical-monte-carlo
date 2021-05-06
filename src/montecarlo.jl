@@ -167,11 +167,15 @@ function structuralfactor(H, vs)
     reshape(sum(reshape(smq0, (3, L, L, 1)) .* sq; dims=1), (L, L, ndt))
 end
 
+"""Shortcut for the other version, in case the time resolved structure
+factor was already computed """
+function frequencystructuralfactor(Sqt)
+    fft(Sqt, 3)
+end
+
 @doc raw"""Computes the (dynamical) frequency structural factor
         ``S(\vec Q, \omega)`` of the given time evolved state v. """
 function frequencystructuralfactor(H, vs, dt)
     Sqt = structuralfactor(H, vs)
-    Sqω = fft(Sqt, 3)
-
-    Sqω
+    frequencystructuralfactor(Sqt)
 end
