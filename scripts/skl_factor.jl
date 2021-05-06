@@ -98,6 +98,8 @@ total_energy = zeros(length(Ts))
             St += St_temp
             Somega += frequencystructuralfactor(St_temp)            
             E += energy(H, v)
+            # use the last time evolved state to improve sampling
+            v = vs[:, :, :, end]
         end
 
         # now that everything is sampled, average
