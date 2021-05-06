@@ -91,6 +91,7 @@ total_energy = zeros(length(Ts))
         # sampling step
         for nsample = 1:nsamples_per_chain
             println("$nsample / $nsamples_per_chain, T = $T (chain $n / $nchains)")
+            flush(stdout)
             mcstep!(H, v, T, stride)
             # save the measurements of interest
             vs = simulate(H, v, dt, nt)
