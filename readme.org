@@ -158,7 +158,9 @@ Parameters to find:
 (Do it for several \(g\) to be safe)
 
 * Dimer order SKL
-
+** Convergence results
+Can be found in =$SCRATCH/master_thesis/scmc/data/dimer-convergence/=.
+   
 * Dynamical structure factor SKL
 Found in skl_factor.jl, skl_factor_notebook.jl. 
 ** Find the params ?
@@ -167,3 +169,5 @@ Found in skl_factor.jl, skl_factor_notebook.jl.
 - Use the same dt / nt as before with bilayer :: =nt, dt=100, 0.1=
 - Save both St and Somega
 - L = 10 as before
+
+** Run the simulation
