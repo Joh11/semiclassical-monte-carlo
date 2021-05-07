@@ -171,3 +171,15 @@ Found in skl_factor.jl, skl_factor_notebook.jl.
 - L = 10 as before
 
 ** Run the simulation
+The thing I get is not wrong, I should just compute it in the extended
+BZ.
+
+** How to integrate the extended BZ thing in the code
+- Make an observable function to compute all the \((N_s L^2)^2\)
+  correlations
+- Make a function to take this as an input, and computes the spatial
+  FT
+
+Multiple files ?
+- a new postprocess file for spatial FT
+- a new test postprocess file
