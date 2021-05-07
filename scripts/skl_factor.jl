@@ -29,20 +29,20 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "First one, hope it's not too big",
+const p = Dict("comment" => "Small one to try",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
-               "L" => 10,
+               "L" => 20,
                "T" => 0.01,
                "thermal" => 100_000,
-               "nchains" => 72, # because 72 cores on Piz Daint
-               "nsamples_per_chain" => 420, # 420 => ~ 30K total samples
+               "nchains" => 8, # because 72 cores on Piz Daint
+               "nsamples_per_chain" => 10000, # 420 => ~ 30K total samples
                "stride" => 100,
                # time evolution stuff
                "dt" => 0.1,
-               "nt" => 100)
-output = "skl_factor.h5"
+               "nt" => 1)
+output = "skl_factor_fast.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
@@ -54,30 +54,22 @@ const stride = p["stride"]
 const dt = p["dt"]
 const nt = p["nt"]
 
-const Ns = 6L^2 # number of sites in total
+const Nsites = H.Ns * L^2 # number of sites in total
 
 # Running the simulation
 # ======================
 
-total_St = zeros(ℂ, L, L, nt)
-total_Somega = zeros(ℂ, L, L, nt)
+total_corr = zeros(ℂ, H.Ns, L, L, H.Ns, L, L)
 total_energy = 0
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
     
     v = randomstate(H.Ns, L)
-    St = zeros(ℂ, L, L, nt)
-    Somega = zeros(ℂ, L, L, nt)
+    corr = zeros(ℂ, H.Ns, L, L, H.Ns, L, L)
     E = 0
-
-    St_temp = zeros(ℂ, L, L, nt) # tmp var
 
     println("Starting T = $T for chain $n / $nchains")
-    # reset variables
-    St .= 0
-    Somega .= 0
-    E = 0
     # thermalization step
     mcstep!(H, v, T, p["thermal"])
     
@@ -86,32 +78,23 @@ total_energy = 0
         println("$nsample / $nsamples_per_chain (chain $n / $nchains)")
         flush(stdout)
         mcstep!(H, v, T, stride)
-        vs = simulate(H, v, dt, nt)
         
-        # save the measurements of interest        
-        St_temp = structuralfactor(H, vs)
-        St += St_temp
-        Somega += frequencystructuralfactor(St_temp)            
+        # save the measurements of interest
+        corr += allcorrelations(v)
         E += energy(H, v)
-        
-        # use the last time evolved state to improve sampling
-        v = vs[:, :, :, end]
     end
     
     # now that everything is sampled, average
-    St /= nsamples_per_chain
-    Somega /= nsamples_per_chain
+    corr /= nsamples_per_chain
     E /= nsamples_per_chain
     
     # and append to the total results (for all chains)
-    global total_St += St
-    global total_Somega += Somega
+    global total_corr += corr
     global total_energy += E
 end
 
 # average over all chains
-total_St /= nchains
-total_Somega /= nchains
+total_corr /= nchains
 total_energy /= nchains
 
 # Saving
@@ -124,8 +107,7 @@ h5open(output, "w") do f
         attributes(f)[name] = val
     end
 
-    f["St"] = total_St
-    f["Somega"] = total_Somega
+    f["corr"] = total_corr
     f["E"] = total_energy
 end
 
