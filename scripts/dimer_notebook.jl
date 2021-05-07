@@ -28,7 +28,7 @@ begin
 end
 
 # ╔═╡ 79fb766c-3537-4c4b-aacc-355ab293d14c
-f = h5open("../skl_dimer_long.h5", "r")
+f = h5open("../data/skl-dimer-convergence/skl_dimer_100k.h5", "r")
 
 # ╔═╡ 552ccc21-bf70-40b6-be18-c219b01d48c3
 # load all the variables
