@@ -179,3 +179,21 @@ function frequencystructuralfactor(H, vs, dt)
     Sqt = structuralfactor(H, vs)
     frequencystructuralfactor(Sqt)
 end
+
+"Returns a (Ns, L, L, Ns, L, L) array of all the correlations S_i ⋅ S_j"
+function allcorrelations(v)
+    Ns = size(v, 1)
+    L = size(v, 2)
+
+    ret = zeros(Ns, L, L, Ns, L, L)
+    Sj = zeros(Vec3)
+
+    for yj = 1:L, xj = 1:L, sj = 1:Ns
+        Sj = v[sj, xj, yj]
+        for yi = 1:L, xi = 1:L, si = 1:Ns
+            ret[si, xi, yi, sj, xj, yj] = v[si, xi, yi] ⋅ Sj
+        end
+    end
+    
+    ret
+end

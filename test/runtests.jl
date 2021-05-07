@@ -264,4 +264,23 @@ using Statistics
         sq = SCMC.ftspacespins(H, vs)
         @test all(sq[:, 1, 1, :] .≈ m0)
     end
+
+    @testset "all correlations" begin
+        Ns = 3
+        L = 10
+        tot = Ns * L^2
+        
+        v = randomstate(Ns, L)
+        corr = allcorrelations(v)
+        corr_mat = reshape(corr, (tot, tot))
+        
+        # correct size
+        @test size(corr) == (Ns, L, L, Ns, L, L)
+
+        # should be symmetric
+        @test all(corr_mat[i, j] ≈ corr_mat[j, i] for i = 1:tot, j = 1:tot)
+
+        # corr[i, i] should be |S_i|²
+        @test all([corr_mat[i, i] ≈ 1 for i = 1:tot])
+    end
 end
