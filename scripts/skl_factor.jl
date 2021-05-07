@@ -29,19 +29,16 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "Small one to try",
+const p = Dict("comment" => "Trying with the extended BZ",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
                "L" => 20,
                "T" => 0.01,
                "thermal" => 100_000,
-               "nchains" => 8, # because 72 cores on Piz Daint
-               "nsamples_per_chain" => 10000, # 420 => ~ 30K total samples
-               "stride" => 100,
-               # time evolution stuff
-               "dt" => 0.1,
-               "nt" => 1)
+               "nchains" => 8, # because 8 cores on my laptop
+               "nsamples_per_chain" => 4_000, # so ~ 30k samples
+               "stride" => 100)
 output = "skl_factor_fast.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
@@ -51,22 +48,20 @@ const nchains = p["nchains"]
 const T = p["T"]
 const nsamples_per_chain = p["nsamples_per_chain"]
 const stride = p["stride"]
-const dt = p["dt"]
-const nt = p["nt"]
 
 const Nsites = H.Ns * L^2 # number of sites in total
 
 # Running the simulation
 # ======================
 
-total_corr = zeros(ℂ, H.Ns, L, L, H.Ns, L, L)
+total_corr = zeros(H.Ns, L, L, H.Ns, L, L)
 total_energy = 0
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
     
     v = randomstate(H.Ns, L)
-    corr = zeros(ℂ, H.Ns, L, L, H.Ns, L, L)
+    corr = zeros(H.Ns, L, L, H.Ns, L, L)
     E = 0
 
     println("Starting T = $T for chain $n / $nchains")
