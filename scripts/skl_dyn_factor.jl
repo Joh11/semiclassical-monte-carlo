@@ -17,15 +17,6 @@ using HDF5
 using SemiClassicalMonteCarlo
 const SCMC = SemiClassicalMonteCarlo
 
-const ℂ = Complex{Float64}
-
-# Utility functions
-# =================
-
-function logrange(x1, x2, n)
-    [10^y for y in range(log10(x1), log10(x2), length=n)]
-end
-
 # Params
 # ======
 
@@ -99,7 +90,7 @@ total_energy = 0
     E /= nsamples_per_chain
     
     # and append to the total results (for all chains)
-    global total_corrs .+= corr
+    global total_corrs .+= corrs
     global total_energy += E
 end
 
