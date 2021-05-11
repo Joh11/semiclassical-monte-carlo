@@ -185,3 +185,16 @@ BZ.
 Multiple files ?
 - a new postprocess file for spatial FT
 - a new test postprocess file
+
+*** Make it faster
+Let's copy Nikita's code to make it fast.
+
+It was still slow. I think it is due to the fact that I had \(L =
+20\). I've let it run, and saved it under =skl_factor_fast.h5=.
+
+** Actual dynamical structure factor simulation
+Params:
+- L = 10 this time, it will be faster
+- dt = 1
+- nt = 100
+- nsamples = 30k like before
