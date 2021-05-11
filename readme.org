@@ -192,6 +192,8 @@ Let's copy Nikita's code to make it fast.
 It was still slow. I think it is due to the fact that I had \(L =
 20\). I've let it run, and saved it under =skl_factor_fast.h5=.
 
+[[file:imgs/static_structure_factor.png]]
+
 ** Actual dynamical structure factor simulation
 Params:
 - L = 10 this time, it will be faster
