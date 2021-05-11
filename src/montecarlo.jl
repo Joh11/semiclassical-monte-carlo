@@ -84,12 +84,11 @@ function simulate(H, v, dt, nt)
                 reltol=1e-5)
 
     # put it in a format usable by the rest of the code
-    nt = length(sol)
     L = size(v)[2]
     ret = zeros(Vec3, H.Ns, L, L, nt)
 
     for n in eachindex(sol.u)
-        @views ret[:, :, :, n] = sol.u[n]
+        @. ret[:, :, :, n] = sol.u[n]
     end
     
     ret
