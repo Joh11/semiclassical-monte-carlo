@@ -47,14 +47,17 @@ function compute_dimers(v, H)
     dimer
 end
 
-"Takes a (12, L, L) array as input"
-function compute_dimer2(dimer, L)
-    dimer2 = zeros(12, 12L^2)
-
-    for i = 1:12L^2
-        @views dimer2[:, i] = dimer[:, 1, 1] .* dimer[i]
+"In place version"
+function compute_dimer2!(dimer2!, dimer, L)
+    for i = 1:size(dimer, 1)
+        @views @. dimer2![:, i] = dimer[:, 1, 1] * dimer[i]
     end
-    
+end
+
+"Takes a (nbonds, L, L) array as input"
+function compute_dimer2(dimer, nbonds, L)
+    dimer2 = zeros(nbonds, nbonds * L^2)
+    compute_dimer2!(dimer2, dimer, L)
     dimer2
 end
 
@@ -64,10 +67,11 @@ function collect_samples!(dimer, dimer2, E; chain=nothing)
     
     v = randomstate(H.Ns, L)
     Di = zeros(nbonds, L, L) # temporary variable for compute_dimers!
+    Di2 = zeros(nbonds, nbonds_tot) # temporary variable for compute_dimers2!
     
     for i in eachindex(Ts)
         T = Ts[i]
-        println("Starting T = $T for chain $n / $nchains")
+        println("Starting T = $T for chain $chain")
 
         # thermalization step
         if i == 1 # hard the first time
@@ -78,12 +82,13 @@ function collect_samples!(dimer, dimer2, E; chain=nothing)
 
         # sampling step
         for nsample = 1:nsamples_per_chain
-            println("$nsample / $nsamples_per_chain, T = $T (chain $n)")
+            println("$nsample / $nsamples_per_chain, T = $T (chain $chain)")
             mcstep!(H, v, T, stride)
             # save the measurements of interest
             compute_dimers!(v, L, bs, Di)
-            @views @. dimer[:, i] += reshape(Di, :)
-            @views @. dimer2[:, :, i] += compute_dimer2(Di, L)
+            compute_dimer2!(Di2, Di, L)
+            @views dimer[:, i] .+= reshape(Di, :)
+            @views dimer2[:, :, i] .+= Di2
             E[i] += energy(H, v)
         end
     end
@@ -130,7 +135,8 @@ E = zeros(length(Ts), nchains)
     println("Starting for chain $n / $nchains ...")
     # use a function to avoid dealing with global variables
     # should help with performance
-    @views collect_samples!(dimer[:, :, n], dimer2[:, :, n], E[:, n])
+    @views collect_samples!(dimer[:, :, n], dimer2[:, :, :, n], E[:, n];
+                            chain=n)
 end
 
 # normalize for each chain
@@ -157,9 +163,9 @@ h5open(output, "w") do f
         T = Ts[i]
         group = create_group(f, "$i")
         group["T"] = T
-        @views @. group["dimer"] = total_dimer[:, i]
-        @views @. group["dimer2"] = total_dimer2[:, :, i]
-        group["E"] = total_energy[i]
+        @views group["dimer"] = dimer[:, i]
+        @views group["dimer2"] = dimer2[:, :, i]
+        group["E"] = E[i]
     end
 end
 
