@@ -14,6 +14,7 @@ they each have the same number of samples).
 using LinearAlgebra
 using Base.Threads
 using HDF5
+using Statistics
 using SemiClassicalMonteCarlo
 const SCMC = SemiClassicalMonteCarlo
 
@@ -57,21 +58,52 @@ function compute_dimer2(dimer, L)
     dimer2
 end
 
+"Collect `nsamples_per_chain` samples for each temperature"
+function collect_samples!(dimer, dimer2, E; chain=nothing)
+    println("Starting for chain $chain ...")
+    
+    v = randomstate(H.Ns, L)
+    Di = zeros(nbonds, L, L) # temporary variable for compute_dimers!
+    
+    for i in eachindex(Ts)
+        T = Ts[i]
+        println("Starting T = $T for chain $n / $nchains")
+
+        # thermalization step
+        if i == 1 # hard the first time
+            mcstep!(H, v, T, p["thermal_first"])
+        else
+            mcstep!(H, v, T, p["thermal"])
+        end
+
+        # sampling step
+        for nsample = 1:nsamples_per_chain
+            println("$nsample / $nsamples_per_chain, T = $T (chain $n)")
+            mcstep!(H, v, T, stride)
+            # save the measurements of interest
+            compute_dimers!(v, L, bs, Di)
+            @views @. dimer[:, i] += reshape(Di, :)
+            @views @. dimer2[:, :, i] += compute_dimer2(Di, L)
+            E[i] += energy(H, v)
+        end
+    end
+end
+
 # Params
 # ======
 
-const p = Dict("comment" => "A big one to make sure everything has converged",
+const p = Dict("comment" => "Only 4x4 to see if I see a dimer order",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
-               "L" => 10,
+               "L" => 4,
                "Ts" => logrange(5e-3, 0.1, 10),
                "thermal_first" => 100_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
-               "nsamples_per_chain" => 5000,
-               "stride" => 500)
-output = "skl_dimer_long2.h5"
+               "nsamples_per_chain" => 5_000,
+               "stride" => 100)
+output = "skl_dimer_4x4.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const bs = bonds(H)
 
@@ -82,67 +114,34 @@ const Ts = p["Ts"]
 const nsamples_per_chain = p["nsamples_per_chain"]
 const stride = p["stride"]
 
-const Ns = 6L^2 # number of sites in total
+const Ns = H.Ns * L^2 # number of sites in total
+const nbonds = length(bs) # number of bonds per unit cell
+const nbonds_tot = nbonds * L^2
 
 # Running the simulation
 # ======================
 
-total_dimer = zeros(2Ns, length(Ts))
-total_dimer2 = zeros(12, 2Ns, length(Ts))
-total_energy = zeros(length(Ts))
+# storing results per chain should be thread safe
+dimer = zeros(nbonds_tot, length(Ts), nchains) # <D_i> for all i
+dimer2 = zeros(nbonds, nbonds_tot, length(Ts), nchains) # <D_i D_j> for i in UC, all j
+E = zeros(length(Ts), nchains)
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
-    
-    v = randomstate(H.Ns, L)
-    dimer = zeros(2Ns) # <D_i> for all i
-    dimer2 = zeros(12, 2Ns) # <D_i D_j> for i in UC, all j
-    E = 0
-    Di = zeros(12, L, L) # temporary variable for compute_dimers!
-    
-    for i in eachindex(Ts)
-        T = Ts[i]
-        println("Starting T = $T for chain $n / $nchains")
-        # reset variables
-        dimer .= 0
-        dimer2 .= 0
-        E = 0
-        # thermalization step
-        if i == 1 # hard the first time
-            mcstep!(H, v, T, p["thermal_first"])
-        else
-            mcstep!(H, v, T, p["thermal"])
-        end
-
-        # sampling step
-        for nsample = 1:nsamples_per_chain
-            println("$nsample / $nsamples_per_chain, T = $T (chain $n / $nchains)")
-            mcstep!(H, v, T, stride)
-            # save the measurements of interest
-            compute_dimers!(v, L, bs, Di)
-            dimer += reshape(Di, :)
-            dimer2 += compute_dimer2(Di, L)
-            E += energy(H, v)
-        end
-
-        # now that everything is sampled, average
-        dimer /= nsamples_per_chain
-        dimer2 /= nsamples_per_chain
-        E /= nsamples_per_chain
-
-        # and append to the total results (for all chains)
-        total_dimer[:, i] += dimer
-        total_dimer2[:, :, i] += dimer2
-        total_energy[i] += E
-    end
+    # use a function to avoid dealing with global variables
+    # should help with performance
+    @views collect_samples!(dimer[:, :, n], dimer2[:, :, n], E[:, n])
 end
 
-# average over all chains
-total_dimer /= nchains
-total_dimer2 /= nchains
-total_energy /= nchains
+# normalize for each chain
+dimer ./= nsamples_per_chain
+dimer2 ./= nsamples_per_chain
+E ./= nsamples_per_chain
 
-
+# then compute the means
+dimer = reshape(mean(dimer; dims=3), (nbonds_tot, length(Ts)))
+dimer2 = reshape(mean(dimer2; dims=4), (nbonds, nbonds_tot, length(Ts)))
+E = reshape(mean(E; dims=2), length(Ts))
 
 # Saving
 # ======
@@ -154,13 +153,13 @@ h5open(output, "w") do f
         attributes(f)[name] = val
     end
 
-    for n in eachindex(Ts)
-        T = Ts[n]
-        group = create_group(f, "$n")
+    for i in eachindex(Ts)
+        T = Ts[i]
+        group = create_group(f, "$i")
         group["T"] = T
-        @views group["dimer"] = total_dimer[:, n]
-        @views group["dimer2"] = total_dimer2[:, :, n]
-        group["E"] = total_energy[n]
+        @views @. group["dimer"] = total_dimer[:, i]
+        @views @. group["dimer2"] = total_dimer2[:, :, i]
+        group["E"] = total_energy[i]
     end
 end
 
