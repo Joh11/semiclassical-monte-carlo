@@ -28,7 +28,7 @@ begin
 end
 
 # ╔═╡ 79fb766c-3537-4c4b-aacc-355ab293d14c
-f = h5open("../data/skl-dimer-convergence/skl_dimer_100k.h5", "r")
+f = h5open("../skl_dimer_4x4_longlong.h5", "r")
 
 # ╔═╡ 552ccc21-bf70-40b6-be18-c219b01d48c3
 # load all the variables
@@ -41,6 +41,10 @@ begin
 	const J3 = read(attributes(f)["J3"])
 	
 	const H = loadhamiltonian("../hamiltonians/skl.dat", [J1, J2, J3])
+	
+	const nsamples_per_chain = read(attributes(f)["nsamples_per_chain"])
+	const nchains = read(attributes(f)["nchains"])
+	const nsamples = nsamples_per_chain * nchains
 end
 
 # ╔═╡ b1283663-56c9-4c12-a6d0-821ff7f50cc0
@@ -90,7 +94,7 @@ function plot_diagram(H::SCMC.Hamiltonian, values)
 		plot!([x1, x2], [y1, y2],
 			legend=nothing,
 			color=color != :auto ? color : (val > 0 ? :red : :blue),
-			linewidth=abs(val))
+			linewidth=10abs(val))
 	end
 	
 	for x0 = 0:L-1
@@ -113,9 +117,16 @@ end
 
 # ╔═╡ 162831b0-73d0-46c6-95fc-2317fd961cf2
 begin
-	plot_diagram(H, reshape(corr, (12, L, L)) / corr[ref_bond])
+	# plot_diagram(H, reshape(corr, (12, L, L)) / corr[ref_bond])
+	plot_diagram(H, reshape(corr, (12, L, L)))
 	plot!(title="correlation for T=$(round(T; digits=3))")
 end
+
+# ╔═╡ fc665d1f-638c-4055-8440-6ea8e2a8553d
+findmax(corr)
+
+# ╔═╡ 5d7e180c-1fa6-4670-a49d-ca0c8a327186
+histogram(corr)
 
 # ╔═╡ 0186d3a7-ba9d-4ed1-9853-fdf8d05b3804
 md"## Plot all the dimer operator averages"
@@ -129,28 +140,11 @@ end
 # ╔═╡ c1d8295d-4bdb-4c44-a983-8e95089c491c
 dimer
 
-# ╔═╡ 20407a4d-c873-4aab-b17e-97b48320c842
-md"## Checking the convergence"
+# ╔═╡ 6450c569-eadb-4329-be16-4d070ee70525
+dimer2
 
-# ╔═╡ 986c7476-be64-45a2-8926-4945a296677d
-fs = map(["../skl_dimer_long.h5"#=, "../skl_dimer_long2.h5"=#]) do path
-	h5open(path, "r")
-end
-
-# ╔═╡ 00beb61e-c02c-49bb-a4a3-4b5cdf901b4f
-# retrieve the number of samples
-const samples = [read(attributes(f)["nchains"]) * read(attributes(f)["nsamples_per_chain"]) for f in fs]
-
-# ╔═╡ e9bcf0bb-5d4d-4c8a-b800-45679f57548d
-# retrieve the temperatures
-all_temps = read(attributes(fs[1])["Ts"])
-
-# ╔═╡ 4ce5dddb-2c28-4638-ac03-04db702512fb
-begin
-	# plot the first dimer for each temperature, for each sample
-	plot(xlabel="number of samples")
-	
-end
+# ╔═╡ 3a755861-5461-4734-8d4d-7b2a363e3e3c
+[dimer2[i, i] - dimer[i]^2 for i = 1:12]
 
 # ╔═╡ Cell order:
 # ╠═f217d8a6-ac0f-11eb-3614-e1b3fd065e68
@@ -168,11 +162,10 @@ end
 # ╠═3e6bb03a-723a-457c-8f78-ef5923dc9a5e
 # ╠═bc3e3d14-040e-4b77-b376-0c84afe378d5
 # ╠═162831b0-73d0-46c6-95fc-2317fd961cf2
+# ╠═fc665d1f-638c-4055-8440-6ea8e2a8553d
+# ╠═5d7e180c-1fa6-4670-a49d-ca0c8a327186
 # ╟─0186d3a7-ba9d-4ed1-9853-fdf8d05b3804
 # ╠═878e6432-55af-46f6-9b9c-6acd8321ad35
 # ╠═c1d8295d-4bdb-4c44-a983-8e95089c491c
-# ╠═20407a4d-c873-4aab-b17e-97b48320c842
-# ╠═986c7476-be64-45a2-8926-4945a296677d
-# ╠═00beb61e-c02c-49bb-a4a3-4b5cdf901b4f
-# ╠═e9bcf0bb-5d4d-4c8a-b800-45679f57548d
-# ╠═4ce5dddb-2c28-4638-ac03-04db702512fb
+# ╠═6450c569-eadb-4329-be16-4d070ee70525
+# ╠═3a755861-5461-4734-8d4d-7b2a363e3e3c

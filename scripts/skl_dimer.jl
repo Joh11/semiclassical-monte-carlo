@@ -82,7 +82,11 @@ function collect_samples!(dimer, dimer2, E; chain=nothing)
 
         # sampling step
         for nsample = 1:nsamples_per_chain
-            println("$nsample / $nsamples_per_chain, T = $T (chain $chain)")
+            if nsample % 100 == 0
+                println(nsample, " / ", nsamples_per_chain,
+                        ", T = ", T, "(chain ", chain, ")")
+            end
+            
             mcstep!(H, v, T, stride)
             # save the measurements of interest
             compute_dimers!(v, L, bs, Di)
@@ -106,9 +110,9 @@ const p = Dict("comment" => "Only 4x4 to see if I see a dimer order",
                "thermal_first" => 100_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
-               "nsamples_per_chain" => 5_000,
-               "stride" => 100)
-output = "skl_dimer_4x4.h5"
+               "nsamples_per_chain" => 60_000,
+               "stride" => 500)
+output = "skl_dimer_4x4_longlong.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const bs = bonds(H)
 
