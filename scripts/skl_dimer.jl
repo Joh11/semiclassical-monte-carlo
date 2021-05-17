@@ -209,6 +209,7 @@ h5open(output, "w") do f
         group["T"] = T
         @views group["dimer"] = dimer[:, i]
         @views group["dimer2"] = dimer2[:, :, i]
+        group["order_param"] = order_param[i]
         group["E"] = E[i]
     end
 end
