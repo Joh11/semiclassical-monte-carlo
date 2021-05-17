@@ -66,8 +66,8 @@ end
 """Takes a dimer array (Nbonds, L, L), for L|2, and returns the order
 parameter (a scalar)"""
 function skl_order_parameter(dimers)
-    L = size(v, 2)
-    Nbonds = size(v, 1)
+    L = size(dimers, 2)
+    Nbonds = size(dimers, 1)
     @assert L % 2 == 0
     @assert Nbonds == 12
     
