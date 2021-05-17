@@ -48,21 +48,56 @@ function compute_dimers(v, H)
 end
 
 "In place version"
-function compute_dimer2!(dimer2!, dimer, L)
-    for i = 1:size(dimer, 1)
-        @views @. dimer2![:, i] = dimer[:, 1, 1] * dimer[i]
-    end
+function compute_dimer2!(dimer2!, dimer, nbonds, L)
+    for i = 1:nbonds
+        @simd for j = 1:nbonds*L^2
+            dimer2![i, j] = dimer[i, 1, 1] * reshape(dimer, :)[j]
+        end
+    end    
 end
 
 "Takes a (nbonds, L, L) array as input"
 function compute_dimer2(dimer, nbonds, L)
     dimer2 = zeros(nbonds, nbonds * L^2)
-    compute_dimer2!(dimer2, dimer, L)
+    compute_dimer2!(dimer2, dimer, nbonds, L)
     dimer2
 end
 
+"""Takes a dimer array (Nbonds, L, L), for L|2, and returns the order
+parameter (a scalar)"""
+function skl_order_parameter(dimers)
+    L = size(v, 2)
+    Nbonds = size(v, 1)
+    @assert L % 2 == 0
+    @assert Nbonds == 12
+    
+    # θ for each different bond
+    red = 1
+    blue = -1
+    green = 1
+    pink = -1
+
+    # for the two kinds of unit cell (bc symmetry breaking)
+    θ1 = [blue, red, 0, 0, red, 0, 0, 0, 0, blue, 0, 0]
+    θ2 = [0, 0, green, pink, 0, green, pink, green, pink, 0, green, pink]
+
+    # now compute the order parameter
+    order = 0
+    for x = 1:L
+        for y = 1:L
+            if (x + y) % 2 == 0
+                @views order += θ1 ⋅ dimers[:, x, y]
+            else
+                @views order += θ2 ⋅ dimers[:, x, y]
+            end
+        end
+    end
+
+    order
+end
+
 "Collect `nsamples_per_chain` samples for each temperature"
-function collect_samples!(dimer, dimer2, E; chain=nothing)
+function collect_samples!(dimer, dimer2, order_param, E; chain=nothing)
     println("Starting for chain $chain ...")
     
     v = randomstate(H.Ns, L)
@@ -84,15 +119,17 @@ function collect_samples!(dimer, dimer2, E; chain=nothing)
         for nsample = 1:nsamples_per_chain
             if nsample % 100 == 0
                 println(nsample, " / ", nsamples_per_chain,
-                        ", T = ", T, "(chain ", chain, ")")
+                        ", T = ", T, " (chain ", chain, ")")
             end
             
             mcstep!(H, v, T, stride)
             # save the measurements of interest
             compute_dimers!(v, L, bs, Di)
-            compute_dimer2!(Di2, Di, L)
+            compute_dimer2!(Di2, Di, nbonds, L)
             @views dimer[:, i] .+= reshape(Di, :)
             @views dimer2[:, :, i] .+= Di2
+            # take the absolute value, as <O> = 0
+            order_param[i] += abs(skl_order_parameter(Di))
             E[i] += energy(H, v)
         end
     end
@@ -101,18 +138,18 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "Only 4x4 to see if I see a dimer order",
+const p = Dict("comment" => "Higher T",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
                "L" => 4,
-               "Ts" => logrange(5e-3, 0.1, 10),
+               "Ts" => [0.3, 0.6, 1, 3, 6, 10],
                "thermal_first" => 100_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
-               "nsamples_per_chain" => 60_000,
+               "nsamples_per_chain" => 4_000,
                "stride" => 500)
-output = "skl_dimer_4x4_longlong.h5"
+output = "skl_dimer_4x4_highT.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const bs = bonds(H)
 
@@ -133,24 +170,27 @@ const nbonds_tot = nbonds * L^2
 # storing results per chain should be thread safe
 dimer = zeros(nbonds_tot, length(Ts), nchains) # <D_i> for all i
 dimer2 = zeros(nbonds, nbonds_tot, length(Ts), nchains) # <D_i D_j> for i in UC, all j
+order_param = zeros(length(Ts), nchains) # <|O|>
 E = zeros(length(Ts), nchains)
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
     # use a function to avoid dealing with global variables
     # should help with performance
-    @views collect_samples!(dimer[:, :, n], dimer2[:, :, :, n], E[:, n];
+    @views collect_samples!(dimer[:, :, n], dimer2[:, :, :, n], order_param[:, n], E[:, n];
                             chain=n)
 end
 
 # normalize for each chain
 dimer ./= nsamples_per_chain
 dimer2 ./= nsamples_per_chain
+order_param ./= nsamples_per_chain
 E ./= nsamples_per_chain
 
 # then compute the means
 dimer = reshape(mean(dimer; dims=3), (nbonds_tot, length(Ts)))
 dimer2 = reshape(mean(dimer2; dims=4), (nbonds, nbonds_tot, length(Ts)))
+order_param = reshape(mean(order_param; dims=2), length(Ts))
 E = reshape(mean(E; dims=2), length(Ts))
 
 # Saving
