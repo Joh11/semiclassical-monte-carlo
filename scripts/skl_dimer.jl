@@ -78,8 +78,8 @@ function skl_order_parameter(dimers)
     pink = -1
 
     # for the two kinds of unit cell (bc symmetry breaking)
-    θ1 = [blue, red, 0, 0, red, 0, 0, 0, 0, blue, 0, 0]
-    θ2 = [0, 0, green, pink, 0, green, pink, green, pink, 0, green, pink]
+    θ1 = [blue, red, 0, 0, red, 0, 0, green, 0, blue, 0, 0]
+    θ2 = [0, 0, green, pink, 0, green, pink, 0, pink, 0, green, pink]
 
     # now compute the order parameter
     order = 0
