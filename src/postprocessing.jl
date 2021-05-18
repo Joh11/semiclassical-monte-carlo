@@ -62,8 +62,8 @@ function compute_dimers!(v, L, bonds, dimer)
         for j = 1:L
             for (n, bond) in enumerate(bonds)
                 dimer[n, i, j] = v[bond.a.index, i, j] ⋅ v[bond.b.index,
-                                                           SCMC.wrapindex(i + bond.b.i, L),
-                                                           SCMC.wrapindex(j + bond.b.j, L)]
+                                                           wrapindex(i + bond.b.i, L),
+                                                           wrapindex(j + bond.b.j, L)]
             end
         end
     end
