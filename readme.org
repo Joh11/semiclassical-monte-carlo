@@ -160,6 +160,8 @@ Parameters to find:
 * Dimer order SKL
 ** Convergence results
 Can be found in =$SCRATCH/master_thesis/scmc/data/dimer-convergence/=.
+** Order parameter
+*** Build a function that takes a state, and returns the order parameter
 * Dynamical structure factor SKL
 Found in skl_factor.jl, skl_factor_notebook.jl. 
 ** Find the params ?
@@ -203,3 +205,6 @@ Params:
 - try on my laptop, perhaps it's not too long
 - to avoid memory issues on the cluster
 - store the correlation at each time step
+
+*** Fix memory leak
+- try to reduce the number of allocations inside the threads
