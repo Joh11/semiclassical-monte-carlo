@@ -72,13 +72,13 @@ const p = Dict("comment" => "4x4, with even higher T",
                "J2" => 1,
                "J3" => 1,
                "L" => 4,
-               "Ts" => logrange(10, 100, 5),
+               "Ts" => logrange(1e-2, 10, 10),
                "thermal_first" => 100_000,
                "thermal" => 10_000,
                "nchains" => 8, # because I have 8 threads on my laptop
                "nsamples_per_chain" => 30_000,
                "stride" => 500)
-output = "skl_dimer_4x4_higherT.h5"
+output = "skl_dimer_4x4_highT.h5"
 const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const bs = bonds(H)
 
