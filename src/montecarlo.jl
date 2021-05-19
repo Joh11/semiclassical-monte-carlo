@@ -84,14 +84,15 @@ function simulate(H, v, dt, nt)
                 reltol=1e-5)
 
     # put it in a format usable by the rest of the code
-    L = size(v)[2]
-    ret = zeros(Vec3, H.Ns, L, L, nt)
+    # L = size(v)[2]
+    # ret = zeros(Vec3, H.Ns, L, L, nt)
 
-    for n in eachindex(sol.u)
-        @. ret[:, :, :, n] = sol.u[n]
-    end
+    # for n in eachindex(sol.u)
+    #     @. ret[:, :, :, n] = sol.u[n]
+    # end
     
-    ret
+    # ret
+    sol
 end
 
 @doc raw"""Computes the space FT of the given time
@@ -179,20 +180,24 @@ function frequencystructuralfactor(H, vs, dt)
     frequencystructuralfactor(Sqt)
 end
 
-"Returns a (Ns, L, L, Ns, L, L) array of all the correlations S_i ⋅ S_j"
-function allcorrelations(v)
-    Ns = size(v, 1)
-    L = size(v, 2)
-
-    ret = zeros(Ns, L, L, Ns, L, L)
+"Inplace version of allcorrelations"
+function allcorrelations!(v1, v2, Ns, L, corr)
     Sj = zeros(Vec3)
 
     for yj = 1:L, xj = 1:L, sj = 1:Ns
-        Sj = v[sj, xj, yj]
+        Sj = v2[sj, xj, yj]
         for yi = 1:L, xi = 1:L, si = 1:Ns
-            ret[si, xi, yi, sj, xj, yj] = v[si, xi, yi] ⋅ Sj
+            corr[si, xi, yi, sj, xj, yj] = v1[si, xi, yi] ⋅ Sj
         end
     end
-    
-    ret
+end
+
+"Returns a (Ns, L, L, Ns, L, L) array of all the correlations S_i ⋅ S_j"
+function allcorrelations(v1, v2)
+    Ns = size(v1, 1)
+    L = size(v1, 2)
+
+    corr = zeros(Ns, L, L, Ns, L, L)
+    allcorrelations!(v1, v2, Ns, L, corr)
+    corr
 end

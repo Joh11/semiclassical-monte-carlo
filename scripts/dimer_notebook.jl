@@ -28,13 +28,13 @@ begin
 end
 
 # ╔═╡ 79fb766c-3537-4c4b-aacc-355ab293d14c
-f = h5open("../skl_dimer_4x4_longlong.h5", "r")
+f = h5open("../skl_dimer_4x4_highT2.h5", "r")
 
 # ╔═╡ 552ccc21-bf70-40b6-be18-c219b01d48c3
 # load all the variables
 begin
 	const L = read(attributes(f)["L"])
-	const Ns = 12L^2
+	const Ns = 6L^2
 	const Ts = read(attributes(f)["Ts"])
 	const J1 = read(attributes(f)["J1"])
 	const J2 = read(attributes(f)["J2"])
@@ -45,6 +45,13 @@ begin
 	const nsamples_per_chain = read(attributes(f)["nsamples_per_chain"])
 	const nchains = read(attributes(f)["nchains"])
 	const nsamples = nsamples_per_chain * nchains
+	
+	const stride = read(attributes(f)["stride"])
+	const comment = read(attributes(f)["comment"])
+	
+	Dict("L" => L, "Ns" => Ns, "Ts" => Ts, "nsamples_per_chain" => nsamples_per_chain,
+		"nchains" => nchains, "nsamples" => nsamples, "stride" => stride, 
+		"comment" => comment)
 end
 
 # ╔═╡ b1283663-56c9-4c12-a6d0-821ff7f50cc0
@@ -59,10 +66,10 @@ Choose the temperature:"
 const T = Ts[parse(Int, Tindex)]
 
 # ╔═╡ 592219b3-2a6a-4863-ad72-97f6ab8bfc0c
-const dimer = read(f["$Tindex/dimer"])
+const dimer = read(f["$Tindex/dimer"]);
 
 # ╔═╡ d1322808-afce-4611-b223-d5d964243960
-const dimer2 = read(f["$Tindex/dimer2"])
+const dimer2 = read(f["$Tindex/dimer2"]);
 
 # ╔═╡ ab926e03-f10b-474c-b267-c54ca9f3cd0c
 md"Choose the reference bond (shown in black on the next plot): "
@@ -75,10 +82,10 @@ const ref_bond = parse(Int, ref_bond_str)
 
 # ╔═╡ 314899e2-75a2-42a8-864c-76d5a3f561c9
 # correlation wrt the ref bond
-const corr = dimer2[ref_bond, :] - dimer[ref_bond] * dimer
+const corr = dimer2[ref_bond, :] - dimer[ref_bond] * dimer;
 
 # ╔═╡ 3e6bb03a-723a-457c-8f78-ef5923dc9a5e
-const E = read(f["$Tindex/E"])
+const E = read(f["$Tindex/E"]);
 
 # ╔═╡ bc3e3d14-040e-4b77-b376-0c84afe378d5
 "Takes an Hamiltonian, and a (12, L, L) array of bond strengths"
@@ -94,7 +101,7 @@ function plot_diagram(H::SCMC.Hamiltonian, values)
 		plot!([x1, x2], [y1, y2],
 			legend=nothing,
 			color=color != :auto ? color : (val > 0 ? :red : :blue),
-			linewidth=10abs(val))
+			linewidth=100abs(val))
 	end
 	
 	for x0 = 0:L-1
@@ -126,25 +133,96 @@ end
 findmax(corr)
 
 # ╔═╡ 5d7e180c-1fa6-4670-a49d-ca0c8a327186
-histogram(corr)
+histogram(corr,
+	title="Distribution of the correlation",
+	legend=nothing,
+	xlabel=L"<D_iD_j> - <D_i><D_j>")
 
 # ╔═╡ 0186d3a7-ba9d-4ed1-9853-fdf8d05b3804
-md"## Plot all the dimer operator averages"
+md"## Order parameter"
+
+# ╔═╡ 3f1cfc3c-aa15-47c3-b436-042e435a91e0
+const order_param = [read(f["$n/order_param"]) for n in eachindex(Ts)]
 
 # ╔═╡ 878e6432-55af-46f6-9b9c-6acd8321ad35
-begin
-	plot_diagram(H, reshape(dimer, (12, L, L)))
-	plot!(title="dimer operators")
+scatter(Ts, order_param / 2Ns,
+	title="order parameter for 4x4",
+	xlabel="T",
+	ylabel=L"<|O|> / N_{bonds}",
+	xaxis=:log,
+	legend=nothing)
+
+# ╔═╡ 8f06d92c-2229-4578-8cff-c774d1d0b4a6
+function sign_structure(L)
+    Nbonds = 12
+    @assert L % 2 == 0
+    
+    # θ for each different bond
+    red = :red
+    blue = :blue
+    green = :green
+    pink = :pink
+
+    # for the two kinds of unit cell (bc symmetry breaking)
+    θ1 = [blue, red, 0, 0, red, 0, 0, green, 0, blue, 0, 0]
+    θ2 = [0, 0, green, pink, 0, green, pink, 0, pink, 0, green, pink]
+
+    # now compute the order parameter
+    ret = Array{Any}(undef, (Nbonds, L, L))
+    for x = 1:L
+        for y = 1:L
+            if (x + y) % 2 == 0
+                ret[:, x, y] = θ1
+            else
+				ret[:, x, y] = θ2
+            end
+        end
+    end
+
+    ret
 end
 
-# ╔═╡ c1d8295d-4bdb-4c44-a983-8e95089c491c
-dimer
+# ╔═╡ bd3dbe56-edfa-44e4-a17d-47b6e1cf020a
+sign_structure(4)
 
-# ╔═╡ 6450c569-eadb-4329-be16-4d070ee70525
-dimer2
+# ╔═╡ 58674407-d1ec-4ac6-8df0-9948e3889b20
+"Takes an Hamiltonian, and a (12, L, L) array of colored bonds"
+function plot_bonds(H::SCMC.Hamiltonian, colors)
+	bs = bonds(H)
+	L = size(colors, 2)
+	plot()
+	
+	function draw(r1, r2, color)
+		x1, y1 = r1
+		x2, y2 = r2
+		
+		if color == 0
+			return nothing
+		end
+		
+		plot!([x1, x2], [y1, y2],
+			legend=nothing,
+			color=color,
+			linewidth=2)
+	end
+	
+	for x0 = 0:L-1
+		for y0 = 0:L-1
+			for (n, bond) in enumerate(bs)
+				draw(bond.a.pos + [x0, y0], 
+					bond.b.pos + [x0, y0],
+					colors[n, x0+1, y0+1])
+			end
+		end
+	end
+	
+	plot!(aspect_ratio=:equal,
+		xticks=nothing,
+		yticks=nothing) # to make sure it renders
+end
 
-# ╔═╡ 3a755861-5461-4734-8d4d-7b2a363e3e3c
-[dimer2[i, i] - dimer[i]^2 for i = 1:12]
+# ╔═╡ 193d3495-c394-4f9e-aac6-86c8fdd7edec
+plot_bonds(H, sign_structure(4))
 
 # ╔═╡ Cell order:
 # ╠═f217d8a6-ac0f-11eb-3614-e1b3fd065e68
@@ -152,12 +230,12 @@ dimer2
 # ╠═552ccc21-bf70-40b6-be18-c219b01d48c3
 # ╟─b1283663-56c9-4c12-a6d0-821ff7f50cc0
 # ╠═e7022954-f8ad-4f52-bcd3-bcde7d4cfb1b
-# ╠═03dce486-d258-4eb8-bdb1-b3361fd7007c
+# ╟─03dce486-d258-4eb8-bdb1-b3361fd7007c
 # ╠═592219b3-2a6a-4863-ad72-97f6ab8bfc0c
 # ╠═d1322808-afce-4611-b223-d5d964243960
 # ╟─ab926e03-f10b-474c-b267-c54ca9f3cd0c
 # ╠═23367950-201e-468c-a6ab-e9402a487c10
-# ╠═02f9308b-a02b-48ca-88fd-092ccc750c0b
+# ╟─02f9308b-a02b-48ca-88fd-092ccc750c0b
 # ╠═314899e2-75a2-42a8-864c-76d5a3f561c9
 # ╠═3e6bb03a-723a-457c-8f78-ef5923dc9a5e
 # ╠═bc3e3d14-040e-4b77-b376-0c84afe378d5
@@ -165,7 +243,9 @@ dimer2
 # ╠═fc665d1f-638c-4055-8440-6ea8e2a8553d
 # ╠═5d7e180c-1fa6-4670-a49d-ca0c8a327186
 # ╟─0186d3a7-ba9d-4ed1-9853-fdf8d05b3804
+# ╠═3f1cfc3c-aa15-47c3-b436-042e435a91e0
 # ╠═878e6432-55af-46f6-9b9c-6acd8321ad35
-# ╠═c1d8295d-4bdb-4c44-a983-8e95089c491c
-# ╠═6450c569-eadb-4329-be16-4d070ee70525
-# ╠═3a755861-5461-4734-8d4d-7b2a363e3e3c
+# ╠═8f06d92c-2229-4578-8cff-c774d1d0b4a6
+# ╠═bd3dbe56-edfa-44e4-a17d-47b6e1cf020a
+# ╠═58674407-d1ec-4ac6-8df0-9948e3889b20
+# ╠═193d3495-c394-4f9e-aac6-86c8fdd7edec
