@@ -70,7 +70,7 @@ function makef(H)
 end
 
 """Advances the state v in time using the semiclassical
-        equations. Returns a (3, Ns, L, L, ndt) vector. """
+        equations. Returns a (Ns, L, L, ndt) vector. """
 function simulate(H, v, dt, nt)
     # define the problem
     tmax = Float64(dt * (nt - 1))
