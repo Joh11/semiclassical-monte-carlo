@@ -103,11 +103,15 @@ corr = reshape(mean(corr; dim=8), (Ns, L, L, Ns, L, L, nt))
 E = mean(E)
 
 # now compute the structure factor
-kxs = 
+kxs = 8π * -1:0.01:1
+kys = 8π * -1:0.01:1
 Sqt = zeros(ℂ, L, L, nt)
 for t = 1:nt
-    Sqt[:, :, t] = structurefactors(H, corr[:, :, :, :, :, :, t])
+    Sqt[:, :, t] = structurefactors(H, corr[:, :, :, :, :, :, t], kxs, kys)
 end
+
+# now compute the frequency resolved structure factor
+Sqω = frequencystructuralfactor(Sqt)
 
 # Saving
 # ======
@@ -120,6 +124,8 @@ h5open(output, "w") do f
     end
 
     f["corr"] = corr
+    f["Sqt"] = Sqt
+    f["Sqω"] = Sqω
     f["E"] = E
 end
 
