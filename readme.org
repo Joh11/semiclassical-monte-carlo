@@ -161,7 +161,9 @@ Parameters to find:
 ** Convergence results
 Can be found in =$SCRATCH/master_thesis/scmc/data/dimer-convergence/=.
 ** Order parameter
-*** Build a function that takes a state, and returns the order parameter
+- the function can be found in =postprocessing.jl=
+** Binning
+- 
 * Dynamical structure factor SKL
 Found in skl_factor.jl, skl_factor_notebook.jl. 
 ** Find the params ?

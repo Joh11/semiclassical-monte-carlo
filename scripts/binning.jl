@@ -36,7 +36,7 @@ end
 
 const H = loadhamiltonian("hamiltonians/skl.dat", [1, 1, 1])
 const L = 4
-const T = 0.1
+const T = 0.01
 const nthermal = 100_000
 const l = 15 # number of steps
 const nsamples = 2^l
@@ -51,13 +51,15 @@ Qs = zeros(nsamples) # samples
 ΔQs = zeros(l)
 Di = zeros(nbonds, L, L) # tmp var for compute_dimers!
 
+naccepted = 0
+
 # generate samples
 for n in eachindex(Qs)
     if n % 1024 == 0
         println("Doing $n / $(length(Qs))")
     end
     
-    mcstep!(H, v, T)
+    global naccepted += mcstep!(H, v, T)
     # evolve it 10s
     vs = simulate(H, v, 10, 2)
     global v = vs[:, :, :, end]
@@ -66,6 +68,14 @@ for n in eachindex(Qs)
     compute_dimers!(v, L, bs, Di)
     global Qs[n] = abs(skl_order_parameter(Di))
 end
+
+println("<Q> = $(mean(Qs))")
+println("Acceptance rate r = $(naccepted / (nsamples * H.Ns * L^2))")
+
+histogram(Qs,
+          title="T = $T",
+          xlabel="Q (abs of order param)")
+readline()
 
 # compute each estimate
 for n in 1:l

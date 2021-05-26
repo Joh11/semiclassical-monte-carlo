@@ -25,6 +25,8 @@ function mcstep!(H, v, T, niter=1)
     Ns = H.Ns
     N = Ns * L^2
     niter *= N
+
+    naccepted = 0
     
     for n in 1:niter
         # choose a random spin
@@ -39,10 +41,13 @@ function mcstep!(H, v, T, niter=1)
         # update spin if accepted
         if ΔE < 0 || rand() < exp(-ΔE / T)
             v[s, i, j] = u
+            naccepted += 1
         else
             # reject (do nothing actually)
         end
     end
+
+    naccepted
 end
 
 "Computes the magnetization, that is the mean of all spins (thus a 3D vector)"
