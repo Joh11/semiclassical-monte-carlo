@@ -99,7 +99,7 @@ corr ./= nsamples_per_chain
 E ./= nsamples_per_chain
 
 # then compute the means
-corr = reshape(mean(corr; dim=8), (Ns, L, L, Ns, L, L, nt))
+corr = reshape(mean(corr; dims=8), (Ns, L, L, Ns, L, L, nt))
 E = mean(E)
 
 # now compute the structure factor
