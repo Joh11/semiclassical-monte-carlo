@@ -27,7 +27,6 @@ function structurefactors(H, corr, kxs, kys)
     for j = 1:Lky
         for i = 1:Lkx
             k = [kxs[i] kxs[j]]
-            println("doing $i $j, $k")
             chi[i, j] = sum(reshape(corr, :) .* reshape(exp.(1im * k * Rs), :))
         end
     end
