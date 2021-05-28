@@ -28,14 +28,21 @@ function collect_samples!(corr, E; chain=nothing)
     println("Starting for chain $chain")
     # thermalization step
     mcstep!(H, v, T, p["thermal"])
+
+    # preallocation for DifferentialEquations.jl
+    # (see https://discourse.julialang.org/t/using-differentialequations-jl-for-very-large-system/1030/2 )
+    timeseries = []
+    ts = []
+    ks = []
     
     # sampling step
     for nsample = 1:nsamples_per_chain
+        println("Doing sample $nsample / $nsamples_per_chain for chain $chain")
         mcstep!(H, v, T, stride)
 
         # time evolution
-        vs = simulate(H, v, p["dt"], nt)
-
+        vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
+        
         # save measurements of interest
         for t = 1:nt
             @views allcorrelations!(vs[:, :, :, 1], vs[:, :, :, t],
@@ -45,10 +52,16 @@ function collect_samples!(corr, E; chain=nothing)
         E += energy(H, v)
 
         # use the last time evolved state
-        v .= vs[:, :, :, end]
+        @views v .= vs[:, :, :, end]
         
-        println("done $nsample / $nsamples_per_chain (chain $n / $nchains)")
+        println("done $nsample / $nsamples_per_chain (chain $chain)")
         flush(stdout)
+
+        # trigger the garbage collector manually
+        if chain == 1 && nsample % 50 == 0
+            println("Running GC manually ...")
+            GC.gc()
+        end
     end
 end
 
@@ -91,7 +104,7 @@ E = zeros(nchains)
 
 @threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
-
+    @views collect_samples!(corr[:, :, :, :, :, :, :, n], E[n]; chain=n)
 end
 
 # normalize for each chain

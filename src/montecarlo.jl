@@ -74,9 +74,7 @@ function makef(H)
     end
 end
 
-"""Advances the state v in time using the semiclassical
-        equations. Returns a (Ns, L, L, ndt) vector. """
-function simulate(H, v, dt, nt)
+function simulate(H, v, dt, nt, timeseries, ts, ks)
     # define the problem
     tmax = Float64(dt * (nt - 1))
     f = makef(H)
@@ -84,20 +82,13 @@ function simulate(H, v, dt, nt)
 
     # solve it
     # save every second
-    sol = solve(prob, saveat=dt,
-                progress=true,
-                reltol=1e-5)
+    solve(prob; saveat=dt, reltol=1e-5, timeseries, ts, ks)
+end
 
-    # put it in a format usable by the rest of the code
-    # L = size(v)[2]
-    # ret = zeros(Vec3, H.Ns, L, L, nt)
-
-    # for n in eachindex(sol.u)
-    #     @. ret[:, :, :, n] = sol.u[n]
-    # end
-    
-    # ret
-    sol
+"""Advances the state v in time using the semiclassical
+        equations. Returns a (Ns, L, L, ndt) vector. """
+function simulate(H, v, dt, nt)
+    simulate(H, v, dt, nt, [], [], [])
 end
 
 @doc raw"""Computes the space FT of the given time
