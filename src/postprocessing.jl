@@ -24,7 +24,8 @@ function structurefactors(H, corr, kxs, kys)
     Lkx, Lky = length(kxs), length(kys)
     chi = zeros(Complex{Float64}, Lkx, Lky)
 
-    for j = 1:Lky
+    @threads for j = 1:Lky
+        println("Doing $j / $Lky ...")
         for i = 1:Lkx
             k = [kxs[i] kxs[j]]
             chi[i, j] = sum(reshape(corr, :) .* reshape(exp.(1im * k * Rs), :))
