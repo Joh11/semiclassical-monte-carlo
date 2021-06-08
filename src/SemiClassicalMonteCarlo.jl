@@ -7,6 +7,7 @@ using LinearAlgebra
 using FFTW
 using Statistics
 using StaticArrays
+using Base.Threads
 
 export loadhamiltonian, randomstate, energy, deltaenergy, magnetization, bonds
 export mcstep!, simulate, structuralfactor, frequencystructuralfactor, allcorrelations!, allcorrelations
