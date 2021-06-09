@@ -25,6 +25,7 @@ const p = Dict("comment" => "Trying with the extended BZ",
                "dt" => 1,
                "nt" => 100)
 
+const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const nt = p["nt"]
 
 # read from old
