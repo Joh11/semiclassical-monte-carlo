@@ -162,8 +162,16 @@ Parameters to find:
 Can be found in =$SCRATCH/master_thesis/scmc/data/dimer-convergence/=.
 ** Order parameter
 - the function can be found in =postprocessing.jl=
+*** TODO Understanding why we don't see any phase transition
+- first, there was the issue of too large correlation time (in sample
+  dim). To tackle that, I should semiclassically time evolve the
+  system a bit, to be sure it is uncorrelated.
+- then, the issue of an arbitrary phase given to the 4 different
+  valence bond states. I could look at each of them individually.
+- finally, there is the issue that the order parameter is not simply
+  flipped (x-1) when we go from one GS to the other. I could take
+  <|O - O'|> instead of <|O|>.
 ** Binning
-- 
 * Dynamical structure factor SKL
 Found in skl_factor.jl, skl_factor_notebook.jl. 
 ** Find the params ?
@@ -210,3 +218,6 @@ Params:
 
 *** Fix memory leak
 - try to reduce the number of allocations inside the threads
+** What to do now with the data
+The structure factor is wrong, since the k points are wrong, only
+going up to kx and ky ~= 1 instead of 8π.
