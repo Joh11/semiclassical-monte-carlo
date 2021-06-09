@@ -82,7 +82,7 @@ const p = Dict("comment" => "Trying with the extended BZ",
                "dt" => 1,
                "nt" => 100)
 output = "skl_dyn_factor.h5"
-const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
+const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
 const Ns = H.Ns
@@ -102,7 +102,7 @@ const Nsites = H.Ns * L^2 # number of sites in total
 corr = zeros(Ns, L, L, Ns, L, L, nt, nchains)
 E = zeros(nchains)
 
-@threads for n in 1:nchains
+Threads.@threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
     @views collect_samples!(corr[:, :, :, :, :, :, :, n], E[n]; chain=n)
 end
@@ -117,11 +117,12 @@ E = mean(E)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-kxs = 8π * -1:0.01:1
-kys = 8π * -1:0.01:1
-Sqt = zeros(ℂ, L, L, nt)
+kxs = 8π * -1:0.05:1
+kys = 8π * -1:0.05:1
+Sqt = zeros(ℂ, length(kxs), length(kys), nt)
 for t = 1:nt
-    Sqt[:, :, t] = structurefactors(H, corr[:, :, :, :, :, :, t], kxs, kys)
+    println("Doing $t / $nt ...")
+    @views Sqt[:, :, t] = structurefactors(H, corr[:, :, :, :, :, :, t], kxs, kys)
 end
 
 # now compute the frequency resolved structure factor
