@@ -31,7 +31,7 @@ const nt = p["nt"]
 f = h5open(oldfilename, "r")
 corr = read(f["corr"])
 E = read(f["E"])
-h5close(f)
+close(f)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
