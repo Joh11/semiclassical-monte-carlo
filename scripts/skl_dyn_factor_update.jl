@@ -32,8 +32,8 @@ corr = nothing
 E = nothing
 
 h5open(oldfilename, "r") do f
-    corr = f["corr"]
-    E = f["E"]
+    global corr = f["corr"]
+    global E = f["E"]
 end
 
 # now compute the structure factor
