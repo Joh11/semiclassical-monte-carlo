@@ -28,13 +28,10 @@ const p = Dict("comment" => "Trying with the extended BZ",
 const nt = p["nt"]
 
 # read from old
-corr = nothing
-E = nothing
-
-h5open(oldfilename, "r") do f
-    global corr = f["corr"]
-    global E = f["E"]
-end
+f = h5open(oldfilename, "r")
+corr = read(f["corr"])
+E = read(f["E"])
+h5close(f)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
