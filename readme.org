@@ -221,3 +221,8 @@ Params:
 ** What to do now with the data
 The structure factor is wrong, since the k points are wrong, only
 going up to kx and ky ~= 1 instead of 8π.
+*** WAIT Wait for the fix to finish
+The file [[file:scripts/skl_dyn_factor_update.jl]] takes care of
+recalculating the dyn / stat. structure factors.
+
+Redo it another time with much more resolution on the non extended UC.

@@ -8,10 +8,10 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-oldfilename = "skl_dyn_factor.h5"
-newfilename = "skl_dyn_factor_fixed.h5"
+oldfilename = "data/skl_dyn_factor.h5"
+newfilename = "data/skl_dyn_factor_uc.h5"
 
-const p = Dict("comment" => "Trying with the extended BZ",
+const p = Dict("comment" => "In the non extended UC",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
@@ -25,7 +25,7 @@ const p = Dict("comment" => "Trying with the extended BZ",
                "dt" => 1,
                "nt" => 100)
 
-const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
+const H = loadhamiltonian("hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 const nt = p["nt"]
 
 # read from old
@@ -36,8 +36,8 @@ close(f)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-kxs = 8π * (-1:0.05:1)
-kys = 8π * (-1:0.05:1)
+kxs = π * Array(-1:0.01:1)
+kys = π * Array(-1:0.01:1)
 Sqt = zeros(ℂ, length(kxs), length(kys), nt)
 for t = 1:nt
     println("Doing $t / $nt ...")
