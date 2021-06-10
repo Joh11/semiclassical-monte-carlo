@@ -1,5 +1,7 @@
+# -*- mode: Org; org-download-image-dir: "imgs/"; -*-
 #+title: Semiclassical Monte Carlo
 #+startup: content
+
 
 * Files
 - [[file:src/HamiltonianMod.jl]]: module to open the hamiltonian file format
@@ -221,8 +223,29 @@ Params:
 ** What to do now with the data
 The structure factor is wrong, since the k points are wrong, only
 going up to kx and ky ~= 1 instead of 8π.
-*** WAIT Wait for the fix to finish
+*** Wait for the fix to finish
 The file [[file:scripts/skl_dyn_factor_update.jl]] takes care of
 recalculating the dyn / stat. structure factors.
 
-Redo it another time with much more resolution on the non extended UC.
+Redo it another time with much more resolution on the non extended
+UC. Data can be found in [[file:data/skl_dyn_factor_uc.h5]].
+
+#+DOWNLOADED: screenshot @ 2021-06-09 17:07:24
+[[file:imgs/2021-06-09_17-07-24_screenshot.png]]
+
+Now with a logarithm:
+#+DOWNLOADED: screenshot @ 2021-06-09 17:04:50
+[[file:imgs/2021-06-09_17-04-50_screenshot.png]]
+
+*** Understanding again the relation between dt, nt, and what we get in the end
+We have the following expressions for the energy step and energy volume:
+\begin{equation*}
+\Delta \omega = \frac{2\pi}{T} \\
+\Omega = \frac{2\pi}{\Delta t}
+\end{equation*}
+*** Retry at higher temperature
+We retry at \(T = 0.1\). We get pretty much the same results, except a
+bit more readable.
+*** TODO Redo everything
+There was no thermal step here ... Let's run it again, for T=0.1. 
+This time, only take the kpath of interest, that is Γ-X-(2π,2π)-M-Γ. 

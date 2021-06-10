@@ -1,9 +1,7 @@
 # Structure factor
 # ================
 
-"Computes the structure factor at all the momentum given by the grid kxs, kys"
-function structurefactors(H, corr, kxs, kys)
-    L = size(corr, 2)
+function compute_positions(H, L)
     Ns = H.Ns
     N = Ns * L^2
 
@@ -19,6 +17,14 @@ function structurefactors(H, corr, kxs, kys)
         end
     end
 
+    Rs
+end
+
+"Computes the structure factor at all the momentum given by the grid kxs, kys"
+function structurefactors(H::Hamiltonian, corr, kxs, kys)
+    L = size(corr, 2)
+    Rs = compute_positions(H, L)
+    
     # second step: compute the structure factor itself
     Lkx, Lky = length(kxs), length(kys)
     chi = zeros(Complex{Float64}, Lkx, Lky)
@@ -33,6 +39,26 @@ function structurefactors(H, corr, kxs, kys)
 
     chi
 end
+
+"Computes the structure factor for a specific kpath (2, nk) array. "
+function structurefactor_kpath!(Rs::Array{Float64}, corr, kpath, chi!)
+    # second step: compute the structure factor itself
+    @threads for i = 1:size(kpath, 2)
+        println("Doing $i ...")
+        @simd for j in eachindex(corr)
+            @views chi![i] += corr[j] * exp(1im * kpath[:, i] ⋅ Rs[:, j])
+        end
+    end
+end
+
+"Computes the structure factor for a specific kpath (2, nk) array. "
+function structurefactor_kpath!(H::Hamiltonian, corr, kpath, chi!)
+    L = size(corr, 2)
+    Rs = compute_positions(H, L)
+
+    structurefactor_kpath!(Rs, corr, kpath, chi!)
+end
+
 
 # Dimer order
 # ===========

@@ -117,17 +117,30 @@ E = mean(E)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-kxs = 8π * -1:0.05:1
-kys = 8π * -1:0.05:1
-Sqt = zeros(ℂ, length(kxs), length(kys), nt)
+nk = 50
+kpath = zeros(2, 4nk)
+
+# fill the kpath
+# Γ - X - (2π, 2π)
+kpath[1, 1:2nk] = [2π * k / (2nk) for k = 0:2nk-1]
+kpath[2, 1:2nk] .= 0
+# (2π, 2π) - M
+kpath[1, 2nk+1:3nk] = [2π * (1 - k / nk) for k = 0:nk-1]
+kpath[2, 2nk+1:3nk] = [2π * k / nk for k = 0:nk-1]
+# M - Γ
+kpath[1, 3nk+1:end] = [π - 2π * k / nk for k = 0:nk-1]
+kpath[2, 3nk+1:end] = [π - 2π * k / nk for k = 0:nk-1]
+
+Sqt = zeros(ℂ, size(kpath, 2), nt)
+const Rs = compute_positions(H, L)
 for t = 1:nt
     println("Doing $t / $nt ...")
-    @views Sqt[:, :, t] = structurefactors(H, corr[:, :, :, :, :, :, t], kxs, kys)
+    @views structurefactor_kpath!(Rs, corr[:, :, :, :, :, :, t], kpath, Sqt[:, t])
 end
 
 # now compute the frequency resolved structure factor
 println("Now computing (frequency resolved) structure factor ...")
-Sqω = frequencystructuralfactor(Sqt)
+Sqω = frequencystructuralfactor(Sqt; dim=2)
 
 # Saving
 # ======
@@ -140,6 +153,7 @@ h5open(output, "w") do f
     end
 
     f["corr"] = corr
+    f["kpath"] = kpath
     f["Sqt"] = Sqt
     f["Sqω"] = Sqω
     f["E"] = E

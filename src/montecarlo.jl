@@ -165,8 +165,8 @@ end
 
 """Shortcut for the other version, in case the time resolved structure
 factor was already computed """
-function frequencystructuralfactor(Sqt)
-    fft(Sqt, 3)
+function frequencystructuralfactor(Sqt; dim=3)
+    fft(Sqt, dim)
 end
 
 @doc raw"""Computes the (dynamical) frequency structural factor
