@@ -122,7 +122,7 @@ E = mean(E)
 println("Now computing structure factor ...")
 Γ = [0, 0]
 X = [π, 0]
-twoπ0 = [2π, 2π]
+twoπ0 = [2π, 0]
 M = [π, π]
 kpath = makekpath([Γ, X, twoπ0, M, Γ], nk)
 
