@@ -121,10 +121,10 @@ nk = 100
 kpath = zeros(2, 4nk)
 
 # fill the kpath
-# Γ - X - (2π, 2π)
+# Γ - X - (2π, 0)
 kpath[1, 1:2nk] = [2π * k / (2nk) for k = 0:2nk-1]
 kpath[2, 1:2nk] .= 0
-# (2π, 2π) - M
+# (2π, 0) - M
 kpath[1, 2nk+1:3nk] = [2π * (1 - k / nk) for k = 0:nk-1]
 kpath[2, 2nk+1:3nk] = [2π * k / nk for k = 0:nk-1]
 # M - Γ
