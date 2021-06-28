@@ -76,11 +76,13 @@ const p = Dict("comment" => "6x6, J1=J2=J3, zoomed in",
                "T" => 0.1,
                "thermal" => 100_000,
                "nchains" => 8, # because 8 cores on my laptop
-               "nsamples_per_chain" => 4_000,# 4_000, # so ~ 30k samples
+               "nsamples_per_chain" => 4_000, # so ~ 30k samples
                "stride" => 100,
                # time evolution params
                "dt" => 2,
-               "nt" => 200)
+               "nt" => 200,
+               "nk" => 100
+               )
 output = "skl_dyn_factor_zoomed.h5"
 const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
@@ -92,6 +94,7 @@ const T = p["T"]
 const nsamples_per_chain = p["nsamples_per_chain"]
 const stride = p["stride"]
 const nt = p["nt"]
+const nk = p["nk"]
 
 const Nsites = H.Ns * L^2 # number of sites in total
 
@@ -117,7 +120,6 @@ E = mean(E)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-nk = 100
 kpath = Array{Vector{Float64}}(undef, 4nk)
 Γ = [0, 0]
 X = [π, 0]
@@ -125,7 +127,7 @@ twoπ0 = [2π, 2π]
 M = [π, π]
 kpath = makekpath([Γ, X, twoπ0, M, Γ], nk)
 
-Sqt = zeros(ℂ, size(kpath), nt)
+Sqt = zeros(ℂ, length(kpath), nt)
 const Rs = compute_positions(H, L)
 for t = 1:nt
     println("Doing $t / $nt ...")
