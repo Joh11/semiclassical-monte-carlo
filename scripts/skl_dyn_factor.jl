@@ -68,20 +68,20 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "Trying with the extended BZ",
+const p = Dict("comment" => "6x6, J1=J2=J3, zoomed in",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
-               "L" => 10,
-               "T" => 0.01,
-               "thermal" => 1,# 00_000,
+               "L" => 6,
+               "T" => 0.1,
+               "thermal" => 100_000,
                "nchains" => 8, # because 8 cores on my laptop
                "nsamples_per_chain" => 4_000,# 4_000, # so ~ 30k samples
                "stride" => 100,
                # time evolution params
-               "dt" => 1,
-               "nt" => 100)
-output = "skl_dyn_factor.h5"
+               "dt" => 2,
+               "nt" => 200)
+output = "skl_dyn_factor_zoomed.h5"
 const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
@@ -117,7 +117,7 @@ E = mean(E)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-nk = 50
+nk = 100
 kpath = zeros(2, 4nk)
 
 # fill the kpath
@@ -159,4 +159,4 @@ h5open(output, "w") do f
     f["E"] = E
 end
 
-println("Finished !")
+aprintln("Finished !")
