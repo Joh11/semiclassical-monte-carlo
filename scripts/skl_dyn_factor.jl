@@ -120,7 +120,6 @@ E = mean(E)
 
 # now compute the structure factor
 println("Now computing structure factor ...")
-kpath = Array{Vector{Float64}}(undef, 4nk)
 Γ = [0, 0]
 X = [π, 0]
 twoπ0 = [2π, 2π]
