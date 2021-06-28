@@ -159,4 +159,4 @@ h5open(output, "w") do f
     f["E"] = E
 end
 
-aprintln("Finished !")
+println("Finished !")
