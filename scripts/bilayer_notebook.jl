@@ -18,6 +18,7 @@ begin
 	using PlutoUI
 	using Plots
 	using HDF5
+	plotly()
 end
 
 # ╔═╡ d0ead2c6-25fc-4274-bffc-894378e05c2b
