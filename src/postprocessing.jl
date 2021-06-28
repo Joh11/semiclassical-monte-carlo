@@ -43,10 +43,10 @@ end
 "Computes the structure factor for a specific kpath (2, nk) array. "
 function structurefactor_kpath!(Rs::Array{Float64}, corr, kpath, chi!)
     # second step: compute the structure factor itself
-    @threads for i = 1:size(kpath, 2)
+    @threads for i = 1:length(kpath)
         println("Doing $i ...")
         @simd for j in eachindex(corr)
-            @views chi![i] += corr[j] * exp(1im * kpath[:, i] ⋅ Rs[:, j])
+            @views chi![i] += corr[j] * exp(1im * kpath[i] ⋅ Rs[:, j])
         end
     end
 end
@@ -59,6 +59,27 @@ function structurefactor_kpath!(H::Hamiltonian, corr, kpath, chi!)
     structurefactor_kpath!(Rs, corr, kpath, chi!)
 end
 
+
+# Kpath
+# =====
+
+"Returns an array of N elements linearly chosen from a to b (excluded)"
+function linspace(a, b, N)
+    Δ = (b - a) / N
+    [a + Δ * n for n in 0:N-1]
+end
+
+"Returns a vector of vectors for the kpath, of N*nk elements, N being the number of segments"
+function makekpath(points, nk)
+    nsegments = length(points) - 1
+    kpath = Array{Vector{Float64}}(undef, nsegments * nk)
+
+    for n in 1:nsegments
+        kpath[((n-1)*nk + 1):(n*nk)] = linspace(points[n], points[n+1], nk)
+    end
+    
+    kpath
+end
 
 # Dimer order
 # ===========

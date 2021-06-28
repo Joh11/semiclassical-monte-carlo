@@ -4,8 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ ce493ae8-c850-11eb-0ff8-153f2e04f562
 begin
+	using PlutoUI
 	using HDF5
 	using Plots
 	using Statistics
@@ -13,24 +23,43 @@ begin
 	plotly()
 end
 
+# ╔═╡ d9f5224d-913a-42b9-ae3d-204ccad8223a
+pathnames = ["../data/results/skl_dyn_factor_high_res.h5" => "default one",
+		     "../data/results/skl_dyn_factor_zoomed.h5" => "zoomed 4x",
+			 "../data/results/skl_dyn_factor_unzoomed.h5" => "unzoomed 4x",
+			 "../data/results/skl_dyn_factor_uud.h5" => "UUD",
+             "../data/results/skl_dyn_factor_neel.h5" => "Néel"]
+
+# ╔═╡ eeed684e-e53f-4b93-ba45-567d372c9e39
+@bind path Radio(pathnames, default=first(pathnames[1]))
+
+# ╔═╡ c30ed7e4-6726-4de3-abed-a9eecbdb6067
+path
+
 # ╔═╡ 2aabfed3-cc32-4928-a5af-a0e13e0ab24c
-f = h5open("../data/skl_dyn_factor_fixed.h5", "r")
+f = h5open(path, "r")
 
 # ╔═╡ e33e3de8-7c80-4b1a-823d-36a970aa6c6d
 begin
 	Sqω = read(f["Sqω"])
 	Sqt = read(f["Sqt"])
 	T = read(attributes(f)["T"])
+	kpath = read(f["kpath"])
+	Dict("dt" => read(attributes(f)["dt"]),
+		 "nt" => read(attributes(f)["nt"]))
 end
 
 # ╔═╡ 317462f9-68df-451f-9209-9dfe4bb94a4a
-heatmap(abs.(Sqt[:, :, 1]))
+Sqω
 
-# ╔═╡ 0ea8db17-7a34-4d5b-bc7a-b16eec157499
-begin
-	kxs = 8π * Array(-1:0.01:1)
-	kys = 8π * Array(-1:0.01:1)
-end
+# ╔═╡ 85e0cc07-58a6-43b7-a394-e574055da765
+kpath
+
+# ╔═╡ a9fc0eb5-1cca-4706-b176-b67392b0d91d
+heatmap(abs.(Sqω)'[1:100, 1:end],
+	xlabel="kpath",
+	ylabel="ω",
+	xticks=([1, 101, 201, 301, 400], ["Γ", "X", "(2π, 0)", "M", "Γ"]))
 
 # ╔═╡ b30037f1-fe93-41d3-84b2-4157137b5893
 function band_diagram_standard(Sqω)
@@ -68,49 +97,23 @@ function band_diagram_large(Sqω)
 	ret
 end
 
-# ╔═╡ 76efa531-8055-4253-a0ba-a367821cb579
-40//2
-
 # ╔═╡ 705d5b29-6ae7-44c9-9000-874c672aba45
 band_diagram_large(Sqω)
 
 # ╔═╡ f44d135c-d0c9-4008-8fe5-c9a79d0486ad
-#=
-heatmap((band_diagram_standard(Sqω)'[2:50, :]), 
-	xticks=([1, 101, 201, 300], ["Γ", "X", "M", "Γ"]),
-	yticks=(0:10:100, ["2π×$(n/100)" for n = 0:10:100]),
-	ylabel="ω",
-	title="dynamical structure factor"
-)
-=#
-
-# ╔═╡ 01908ab5-69a5-45d3-bddf-f2c20adf402f
-heatmap((band_diagram_large(Sqω)'[2:50, :]), 
-	xticks=([1, 6, 11, 16, 20], ["Γ", "X", "(2π, 2π)", "M", "Γ"]),
-	yticks=(0:10:100, ["2π×$(n/100)" for n = 0:10:100]),
-	ylabel="ω",
-	title="dynamical structure factor"
-)
-
-# ╔═╡ 621a2a26-8c4b-4625-a4df-04330af035e6
-Sqω
-
-# ╔═╡ 41304844-7ed6-4687-81b4-ece512c29d36
-heatmap(reshape(real.(mean(Sqω; dims=3)), 41, 41),
-	xticks=([1, 21, 41], ["-8π", "0", "8π"]),
-	yticks=([1, 21, 41], ["-8π", "0", "8π"]))
+scatter(kpath[1, 1:250], kpath[2, 1:250])
 
 # ╔═╡ Cell order:
 # ╠═ce493ae8-c850-11eb-0ff8-153f2e04f562
+# ╠═d9f5224d-913a-42b9-ae3d-204ccad8223a
+# ╠═eeed684e-e53f-4b93-ba45-567d372c9e39
+# ╠═c30ed7e4-6726-4de3-abed-a9eecbdb6067
 # ╠═2aabfed3-cc32-4928-a5af-a0e13e0ab24c
 # ╠═e33e3de8-7c80-4b1a-823d-36a970aa6c6d
 # ╠═317462f9-68df-451f-9209-9dfe4bb94a4a
-# ╠═0ea8db17-7a34-4d5b-bc7a-b16eec157499
+# ╠═85e0cc07-58a6-43b7-a394-e574055da765
+# ╠═a9fc0eb5-1cca-4706-b176-b67392b0d91d
 # ╠═b30037f1-fe93-41d3-84b2-4157137b5893
 # ╠═c84c7955-ccd0-4840-8fab-0a06cd8ddcbe
-# ╠═76efa531-8055-4253-a0ba-a367821cb579
 # ╠═705d5b29-6ae7-44c9-9000-874c672aba45
 # ╠═f44d135c-d0c9-4008-8fe5-c9a79d0486ad
-# ╠═01908ab5-69a5-45d3-bddf-f2c20adf402f
-# ╠═621a2a26-8c4b-4625-a4df-04330af035e6
-# ╠═41304844-7ed6-4687-81b4-ece512c29d36

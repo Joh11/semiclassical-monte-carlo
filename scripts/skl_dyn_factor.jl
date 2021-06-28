@@ -118,20 +118,14 @@ E = mean(E)
 # now compute the structure factor
 println("Now computing structure factor ...")
 nk = 100
-kpath = zeros(2, 4nk)
+kpath = Array{Vector{Float64}}(undef, 4nk)
+Γ = [0, 0]
+X = [π, 0]
+twoπ0 = [2π, 2π]
+M = [π, π]
+kpath = makekpath([Γ, X, twoπ0, M, Γ], nk)
 
-# fill the kpath
-# Γ - X - (2π, 0)
-kpath[1, 1:2nk] = [2π * k / (2nk) for k = 0:2nk-1]
-kpath[2, 1:2nk] .= 0
-# (2π, 0) - M
-kpath[1, 2nk+1:3nk] = [2π * (1 - k / nk) for k = 0:nk-1]
-kpath[2, 2nk+1:3nk] = [2π * k / nk for k = 0:nk-1]
-# M - Γ
-kpath[1, 3nk+1:end] = [π - 2π * k / nk for k = 0:nk-1]
-kpath[2, 3nk+1:end] = [π - 2π * k / nk for k = 0:nk-1]
-
-Sqt = zeros(ℂ, size(kpath, 2), nt)
+Sqt = zeros(ℂ, size(kpath), nt)
 const Rs = compute_positions(H, L)
 for t = 1:nt
     println("Doing $t / $nt ...")
