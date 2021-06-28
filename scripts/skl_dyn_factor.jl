@@ -65,6 +65,14 @@ function collect_samples!(corr, E; chain=nothing)
     end
 end
 
+function kpath2mat(kpath)
+    mat = zeros(2, length(kpath))
+    for (n, k) in enumerate(kpath)
+        mat[:, n] .= k
+    end
+    mat
+end
+
 # Params
 # ======
 
@@ -148,7 +156,7 @@ h5open(output, "w") do f
     end
 
     f["corr"] = corr
-    f["kpath"] = kpath
+    f["kpath"] = kpath2mat(kpath)
     f["Sqt"] = Sqt
     f["Sqω"] = Sqω
     f["E"] = E
