@@ -76,7 +76,7 @@ end
 # Params
 # ======
 
-const p = Dict("comment" => "6x6, J1=J2=J3, zoomed in",
+const p = Dict("comment" => "8x8, J1=J2=J3, 4x zoom",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
@@ -91,7 +91,7 @@ const p = Dict("comment" => "6x6, J1=J2=J3, zoomed in",
                "nt" => 200,
                "nk" => 100
                )
-output = "skl_dyn_factor_zoomed.h5"
+output = "skl_dyn_factor_zoomed_8x8.h5"
 const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
