@@ -45,7 +45,9 @@ end
 "Update the kpath and kpath specific structure factor (both time and energy resolved)"
 function update_kpath_structurefactor(f, H, highsympoints)
     # TODO
-    nt, L, nk
+    nt = read(attributes(f)["nt"])
+    L = read(attributes(f)["L"])
+    nk = read(attributes(f)["nk"])
     
     kpath = makekpath(highsympoints, nk)
     
