@@ -13,17 +13,12 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples!(; chain=nothing)
+function collect_samples!(corr0; chain=nothing)
     v = randomstate(Ns, L)
     L½ = 1 + L÷2 # like that L=4 => L½= 3
 
     corr = 0
-    fac = 0
-    
     corr_tmp = zeros(Ns, L, L, Ns, L, L)
-    # just a trick to use structurefactor_kpath!
-    fac_tmp = zeros(ℂ, 1)
-    kpath_tmp = [[4π, 0]]
     
     println("Starting for chain $chain")
     # thermalization step
@@ -52,8 +47,7 @@ function collect_samples!(; chain=nothing)
         corr += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
 
         # S(4π, 0)
-        structurefactor_kpath!(Rs, corr_tmp, kpath_tmp, fac_tmp)
-        fac += abs.(fac_tmp[1])
+        corr0 .+= corr_tmp
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
@@ -68,7 +62,7 @@ function collect_samples!(; chain=nothing)
         end
     end
 
-    corr / nsamples_per_chain, fac / nsamples_per_chain
+    corr / nsamples_per_chain
 end
 
 function kpath2mat(kpath)
@@ -118,13 +112,19 @@ const Rs = compute_positions(H, L)
 # ======================
 
 # storing results per chain should be thread safe
+corr0 = zeros(Ns, L, L, Ns, L, L, nchains)
 
 # do a "dumb" error estimation by simply taking the std over the chains
-corr = zeros(nchains)
+chalf = zeros(nchains) # the <Si⋅Sj> correlation
 fac = zeros(nchains)
 
 @threads for n in 1:nchains
-    corr[n], fac[n] = collect_samples!(; chain=n)
+    @views corr[n] = collect_samples!(corr0[:, :, :, :, :, :, n]; chain=n)
+    
+    # now compute the structure factor S(4π, 0) for each chain
+    fac_tmp = zeros(ℂ, 1)
+    @views structurefactor_kpath!(Rs, corr0[:, :, :, :, :, :, n], [[4π, 0]], fac_tmp)
+    fac[n] = abs.(fac_tmp[1])
 end
 
 Δcorr = std(corr)
