@@ -20,10 +20,14 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples!(corr, E; chain=nothing)
+function collect_samples!(corr, fac; chain=nothing)
     v = randomstate(Ns, L)
+    L½ = 1 + L÷2 # like that L=4 => L½= 3
 
     corr_tmp = zeros(Ns, L, L, Ns, L, L, nt)
+    # just a trick to use structurefactor_kpath!
+    fac_tmp = zeros(1)
+    kpath_tmp = reshape([4π, 0], (2, 1))
     
     println("Starting for chain $chain")
     # thermalization step
@@ -41,6 +45,7 @@ function collect_samples!(corr, E; chain=nothing)
         mcstep!(H, v, T, stride)
 
         # time evolution
+        # we still have to time evolve to improve the sampling
         vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
         
         # save measurements of interest
@@ -48,8 +53,13 @@ function collect_samples!(corr, E; chain=nothing)
             @views allcorrelations!(vs[:, :, :, 1], vs[:, :, :, t],
                                     Ns, L, corr_tmp[:, :, :, :, :, :, t])
         end
-        corr .+= corr_tmp
-        E += energy(H, v)
+        
+        # now compute the measurements of interest
+        corr[nsample] = mean([corr[i, 1, 1, i, L½, L½, 1] for i = 1:Ns])
+
+        # S(4π, 0)
+        structurefactor_kpath!(Rs, corr_tmp, kpath_tmp, fac_tmp)
+        fac[sample] = fac_tmp[1]
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
@@ -105,30 +115,23 @@ const nt = p["nt"]
 
 const Nsites = H.Ns * L^2 # number of sites in total
 
+# Precompute the position of each site
+const Rs = compute_positions(H, L)
+
 # Running the simulation
 # ======================
 
 # storing results per chain should be thread safe
-corr = zeros(Ns, L, L, Ns, L, L, nt, nchains)
-E = zeros(nchains)
+
+# in this case we don't have much to store, so we store every sample
+# to do binning analysis
+corr = zeros(nsamples_per_chain, nchains)
+fac = zeros(nsamples_per_chain, nchains)
 
 Threads.@threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
-    @views collect_samples!(corr[:, :, :, :, :, :, :, n], E[n]; chain=n)
+    @views collect_samples!(corr[:, n], fac[:, n]; chain=n)
 end
-
-# normalize for each chain
-corr ./= nsamples_per_chain
-E ./= nsamples_per_chain
-
-# then compute the means
-corr = reshape(mean(corr; dims=8), (Ns, L, L, Ns, L, L, nt))
-E = mean(E)
-
-# now compute S(q) on the whole EBZ
-println("Now computing the whole EBZ structure factor S(q) ...")
-@views corr0 = corr[:, :, :, :, :, :, 1]
-St0 = structurefactors(H, corr0, [4π], [0])
 
 # Saving
 # ======
@@ -141,7 +144,7 @@ h5open(output, "w") do f
     end
 
     f["corr"] = corr
-    f["St0"] = St0
+    f["fac"] = fac
     f["E"] = E
 end
 
