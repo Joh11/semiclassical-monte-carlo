@@ -52,7 +52,6 @@ function collect_samples!(; chain=nothing)
         corr += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
 
         # S(4π, 0)
-        println("$(size(Rs)) $(size(corr_tmp)) $(size(kpath_tmp)) $(size(fac_tmp))")
         structurefactor_kpath!(Rs, corr_tmp, kpath_tmp, fac_tmp)
         fac += abs.(fac_tmp[1])
 
@@ -63,13 +62,13 @@ function collect_samples!(; chain=nothing)
         flush(stdout)
 
         # trigger the garbage collector manually
-        if chain == 1 && nsample % 50 == 0
+        if chain == 1 && nsample % 1_000 == 0
             println("Running GC manually ...")
             GC.gc()
         end
     end
 
-    corr, fac
+    corr / nsamples_per_chain, fac / nsamples_per_chain
 end
 
 function kpath2mat(kpath)
@@ -124,8 +123,7 @@ const Rs = compute_positions(H, L)
 corr = zeros(nchains)
 fac = zeros(nchains)
 
-Threads.@threads for n in 1:nchains
-    println("Starting for chain $n / $nchains ...")
+@threads for n in 1:nchains
     corr[n], fac[n] = collect_samples!(; chain=n)
 end
 

@@ -44,7 +44,7 @@ end
 function structurefactor_kpath!(Rs::Array{Float64}, corr, kpath, chi!)
     # second step: compute the structure factor itself
     @threads for i = 1:length(kpath)
-        println("Doing $i ...")
+        # println("Doing $i ...")
         @simd for j in eachindex(corr)
             @views chi![i] += corr[j] * exp(1im * kpath[i] ⋅ Rs[:, j])
         end
