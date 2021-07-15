@@ -24,9 +24,9 @@ function collect_samples!(corr, fac; chain=nothing)
     v = randomstate(Ns, L)
     L½ = 1 + L÷2 # like that L=4 => L½= 3
 
-    corr_tmp = zeros(Ns, L, L, Ns, L, L, nt)
+    corr_tmp = zeros(Ns, L, L, Ns, L, L)
     # just a trick to use structurefactor_kpath!
-    fac_tmp = zeros(1)
+    fac_tmp = zeros(ℂ, 1)
     kpath_tmp = reshape([4π, 0], (2, 1))
     
     println("Starting for chain $chain")
@@ -49,17 +49,15 @@ function collect_samples!(corr, fac; chain=nothing)
         vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
         
         # save measurements of interest
-        for t = 1:nt
-            @views allcorrelations!(vs[:, :, :, 1], vs[:, :, :, t],
-                                    Ns, L, corr_tmp[:, :, :, :, :, :, t])
-        end
+        @views allcorrelations!(vs[:, :, :, 1], vs[:, :, :, 1],
+                                Ns, L, corr_tmp)
         
         # now compute the measurements of interest
         corr[nsample] = mean([corr[i, 1, 1, i, L½, L½, 1] for i = 1:Ns])
 
         # S(4π, 0)
         structurefactor_kpath!(Rs, corr_tmp, kpath_tmp, fac_tmp)
-        fac[sample] = fac_tmp[1]
+        fac[sample] = abs.(fac_tmp[1])
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
