@@ -115,7 +115,7 @@ const Rs = compute_positions(H, L)
 corr0 = zeros(Ns, L, L, Ns, L, L, nchains)
 
 # do a "dumb" error estimation by simply taking the std over the chains
-chalf = zeros(nchains) # the <Si⋅Sj> correlation
+corr = zeros(nchains) # the <Si⋅Sj> correlation
 fac = zeros(nchains)
 
 @threads for n in 1:nchains
