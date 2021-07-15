@@ -175,7 +175,7 @@ Can be found in =$SCRATCH/master_thesis/scmc/data/dimer-convergence/=.
   <|O - O'|> instead of <|O|>.
 ** Binning
 * Dynamical structure factor SKL
-Found in skl_factor.jl, skl_factor_notebook.jl. 
+Found in skl_dyn_factor.jl, skl_dyn_factor_notebook.jl. 
 ** Find the params ?
 - Use the nsample scan from dimer to choose the number of samples :: 30K
 - Use the same T scan :: =logrange(5e-3, 0.1, 10)=
@@ -246,6 +246,64 @@ We have the following expressions for the energy step and energy volume:
 *** Retry at higher temperature
 We retry at \(T = 0.1\). We get pretty much the same results, except a
 bit more readable.
-*** TODO Redo everything
+*** Redo everything
 There was no thermal step here ... Let's run it again, for T=0.1. 
 This time, only take the kpath of interest, that is Γ-X-(2π,2π)-M-Γ. 
+
+** Final rush
+*** General
+- present the S(t=0) plots nicely
+  - perhaps do them in Python for nicer plots
+- [[file:scripts/skl_dyn_factor_update.jl]] hot fix the kpath and St, Somega
+*** QSL phase
+- try with 8x8 to see if I get 4 peaks per segment
+  - the last one failed because I forgot to change L...
+*** TODO Neel phase
+- take a kpath going through \((2\pi, 2\pi)\) to look for magnons
+- redo a kpath: Gamma - (2pi, 0) - (2pi, 2pi) - Gamma
+
+#+DOWNLOADED: screenshot @ 2021-06-29 14:40:48
+[[file:imgs/2021-06-29_14-40-48_screenshot.png]]
+
+**** Try with even higher T ?
+Perhaps I need even more temperature to get even more magnons.
+I need to do it again since I was using the wrong kpath.
+
+Does not look good either.
+#+DOWNLOADED: screenshot @ 2021-07-13 10:31:34
+[[file:imgs/2021-07-13_10-31-34_screenshot.png]]
+
+**** Perhaps with even lower T ?
+Neither.
+
+#+DOWNLOADED: screenshot @ 2021-07-13 10:57:47
+[[file:imgs/2021-07-13_10-57-47_screenshot.png]]
+
+**** WAIT Try reversing J2 and J3 ?
+Not really either.
+
+#+DOWNLOADED: screenshot @ 2021-07-13 11:12:37
+[[file:imgs/2021-07-13_11-12-37_screenshot.png]]
+
+*** UUD phase
+- understand were the plateaus come from
+  - to do this, I ran a much bigger UUD (20x20); let's see how it goes
+- redo a kpath: Gamma - (2pi, 0) - (4pi, 0) - (2pi, 2pi) - Gamma
+
+- the plateaus came from finite size effect
+- use [[file:scripts/skl_dyn_factor_plot.jl]] to plot it
+  
+#+DOWNLOADED: screenshot @ 2021-06-29 14:38:34
+[[file:imgs/2021-06-29_14-38-34_screenshot.png]]
+
+*** TODO Holstein-Primakoff / SCMC magnons comparaison
+- code under the =holstein-primakoff= directory
+- try to understand it
+- g1, g2, g3 == J1, J2, J3
+*** TODO UUD -> QSL magnon branches
+
+*** TODO UUD -> QSL S(q)
+
+*** TODO Scaling comparaison
+For now I don't do binning analysis, use the std as a cheap error
+bar. If enough time I'll fix this.

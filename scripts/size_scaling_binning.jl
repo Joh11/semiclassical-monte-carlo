@@ -13,14 +13,17 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples!(corr, fac; chain=nothing)
+function collect_samples!(; chain=nothing)
     v = randomstate(Ns, L)
     L½ = 1 + L÷2 # like that L=4 => L½= 3
 
+    corr = 0
+    fac = 0
+    
     corr_tmp = zeros(Ns, L, L, Ns, L, L)
     # just a trick to use structurefactor_kpath!
     fac_tmp = zeros(ℂ, 1)
-    kpath_tmp = reshape([4π, 0], (2, 1))
+    kpath_tmp = [[4π, 0]]
     
     println("Starting for chain $chain")
     # thermalization step
@@ -46,11 +49,12 @@ function collect_samples!(corr, fac; chain=nothing)
                                 Ns, L, corr_tmp)
         
         # now compute the measurements of interest
-        corr[nsample] = mean([corr[i, 1, 1, i, L½, L½, 1] for i = 1:Ns])
+        corr += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
 
         # S(4π, 0)
+        println("$(size(Rs)) $(size(corr_tmp)) $(size(kpath_tmp)) $(size(fac_tmp))")
         structurefactor_kpath!(Rs, corr_tmp, kpath_tmp, fac_tmp)
-        fac[sample] = abs.(fac_tmp[1])
+        fac += abs.(fac_tmp[1])
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
@@ -64,6 +68,8 @@ function collect_samples!(corr, fac; chain=nothing)
             GC.gc()
         end
     end
+
+    corr, fac
 end
 
 function kpath2mat(kpath)
@@ -114,15 +120,20 @@ const Rs = compute_positions(H, L)
 
 # storing results per chain should be thread safe
 
-# in this case we don't have much to store, so we store every sample
-# to do binning analysis
-corr = zeros(nsamples_per_chain, nchains)
-fac = zeros(nsamples_per_chain, nchains)
+# do a "dumb" error estimation by simply taking the std over the chains
+corr = zeros(nchains)
+fac = zeros(nchains)
 
 Threads.@threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
-    @views collect_samples!(corr[:, n], fac[:, n]; chain=n)
+    corr[n], fac[n] = collect_samples!(; chain=n)
 end
+
+Δcorr = std(corr)
+Δfac = std(fac)
+
+corr = mean(corr)
+fac = mean(fac)
 
 # Saving
 # ======
@@ -136,7 +147,9 @@ h5open(output, "w") do f
 
     f["corr"] = corr
     f["fac"] = fac
-    f["E"] = E
+
+    f["Δcorr"] = Δcorr
+    f["Δfac"] = Δfac
 end
 
 println("Finished !")
