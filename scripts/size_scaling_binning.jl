@@ -46,7 +46,7 @@ function collect_samples!(corr, fac)
         corr[nsample] += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
 
         # S(4π, 0)
-        fill(chi_tmp, 0)
+        fill!(chi_tmp, 0)
         structurefactor_kpath!(Rs, corr_tmp, [[4π, 0]], chi_tmp)
         fac[nsample] = abs(chi_tmp[1])
 
