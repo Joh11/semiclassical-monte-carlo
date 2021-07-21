@@ -75,8 +75,8 @@ const p = Dict("comment" => "finite size scaling analysis, UUD",
                "L" => parse(Int, ARGS[1]),
                "T" => 0.1,
                "thermal" => 100_000,
-               "nsamples" => 30_000,
-               "stride" => 100,
+               "nsamples" => 2^15,
+               "stride" => 50,
                # time evolution params
                "dt" => 100,
                "nt" => 2
