@@ -13,14 +13,13 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples!(corr0; chain=nothing)
+function collect_samples!(corr, fac)
     v = randomstate(Ns, L)
     L½ = 1 + L÷2 # like that L=4 => L½= 3
 
-    corr = 0
     corr_tmp = zeros(Ns, L, L, Ns, L, L)
+    chi_tmp = zeros(ℂ, 1)
     
-    println("Starting for chain $chain")
     # thermalization step
     mcstep!(H, v, T, p["thermal"])
 
@@ -31,8 +30,8 @@ function collect_samples!(corr0; chain=nothing)
     ks = []
     
     # sampling step
-    for nsample = 1:nsamples_per_chain
-        println("Doing sample $nsample / $nsamples_per_chain for chain $chain")
+    for nsample = 1:nsamples
+        println("Doing sample $nsample / $nsamples")
         mcstep!(H, v, T, stride)
 
         # time evolution
@@ -44,33 +43,25 @@ function collect_samples!(corr0; chain=nothing)
                                 Ns, L, corr_tmp)
         
         # now compute the measurements of interest
-        corr += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
+        corr[nsample] += mean([corr_tmp[i, 1, 1, i, L½, L½] for i = 1:Ns])
 
         # S(4π, 0)
-        corr0 .+= corr_tmp
+        fill(chi_tmp, 0)
+        structurefactor_kpath!(Rs, corr_tmp, [[4π, 0]], chi_tmp)
+        fac[nsample] = abs(chi_tmp[1])
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
         
-        println("done $nsample / $nsamples_per_chain (chain $chain)")
+        println("done $nsample / $nsamples")
         flush(stdout)
 
         # trigger the garbage collector manually
-        if chain == 1 && nsample % 1_000 == 0
-            println("Running GC manually ...")
-            GC.gc()
-        end
+        # if nsample % 1_000 == 0
+        #     println("Running GC manually ...")
+        #     GC.gc()
+        # end
     end
-
-    corr / nsamples_per_chain
-end
-
-function kpath2mat(kpath)
-    mat = zeros(2, length(kpath))
-    for (n, k) in enumerate(kpath)
-        mat[:, n] .= k
-    end
-    mat
 end
 
 # Params
@@ -84,8 +75,7 @@ const p = Dict("comment" => "finite size scaling analysis, UUD",
                "L" => parse(Int, ARGS[1]),
                "T" => 0.1,
                "thermal" => 100_000,
-               "nchains" => 16, # because 8 cores on my laptop
-               "nsamples_per_chain" => 4_000, # so ~ 30k samples
+               "nsamples" => 30_000,
                "stride" => 100,
                # time evolution params
                "dt" => 100,
@@ -97,9 +87,8 @@ const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]]
 # variables often used have an alias
 const Ns = H.Ns
 const L = p["L"]
-const nchains = p["nchains"]
 const T = p["T"]
-const nsamples_per_chain = p["nsamples_per_chain"]
+const nsamples = p["nsamples"]
 const stride = p["stride"]
 const nt = p["nt"]
 
@@ -111,27 +100,11 @@ const Rs = compute_positions(H, L)
 # Running the simulation
 # ======================
 
-# storing results per chain should be thread safe
-corr0 = zeros(Ns, L, L, Ns, L, L, nchains)
+# use a single chain for simplicity
+corr = zeros(nsamples) # the <Si⋅Sj> correlation
+fac = zeros(nsamples) # S(4π, 0)
 
-# do a "dumb" error estimation by simply taking the std over the chains
-corr = zeros(nchains) # the <Si⋅Sj> correlation
-fac = zeros(nchains)
-
-@threads for n in 1:nchains
-    @views corr[n] = collect_samples!(corr0[:, :, :, :, :, :, n]; chain=n)
-    
-    # now compute the structure factor S(4π, 0) for each chain
-    fac_tmp = zeros(ℂ, 1)
-    @views structurefactor_kpath!(Rs, corr0[:, :, :, :, :, :, n], [[4π, 0]], fac_tmp)
-    fac[n] = abs.(fac_tmp[1])
-end
-
-Δcorr = std(corr)
-Δfac = std(fac)
-
-corr = mean(corr)
-fac = mean(fac)
+collect_samples!(corr, fac)
 
 # Saving
 # ======
@@ -145,9 +118,6 @@ h5open(output, "w") do f
 
     f["corr"] = corr
     f["fac"] = fac
-
-    f["Δcorr"] = Δcorr
-    f["Δfac"] = Δfac
 end
 
 println("Finished !")
