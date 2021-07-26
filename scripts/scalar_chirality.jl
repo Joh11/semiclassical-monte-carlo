@@ -19,10 +19,9 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples!(corr, E; chain=nothing)
+function collect_samples(chain=nothing)
     v = randomstate(Ns, L)
-
-    corr_tmp = zeros(Ns, L, L, Ns, L, L, nt)
+    sc = 0
     
     println("Starting for chain $chain")
     # thermalization step
@@ -43,12 +42,7 @@ function collect_samples!(corr, E; chain=nothing)
         vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
         
         # save measurements of interest
-        for t = 1:nt
-            @views allcorrelations!(vs[:, :, :, 1], vs[:, :, :, t],
-                                    Ns, L, corr_tmp[:, :, :, :, :, :, t])
-        end
-        corr .+= corr_tmp
-        E += energy(H, v)
+        @views sc += scalarchirality(vs[:, :, :, 1])
 
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
@@ -62,14 +56,8 @@ function collect_samples!(corr, E; chain=nothing)
             GC.gc()
         end
     end
-end
 
-function kpath2mat(kpath)
-    mat = zeros(2, length(kpath))
-    for (n, k) in enumerate(kpath)
-        mat[:, n] .= k
-    end
-    mat
+    sc
 end
 
 # Params
@@ -111,7 +99,7 @@ sc = zeros(nchains)
 
 Threads.@threads for n in 1:nchains
     println("Starting for chain $n / $nchains ...")
-    sc[n] = collect_samples!(; chain=n)
+    sc[n] = collect_samples(n)
 end
 
 # normalize for each chain
