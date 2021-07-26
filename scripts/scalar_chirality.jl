@@ -1,12 +1,6 @@
 #=
 
-A script to compute the scalar chirality for square kagome lattice
-
-This is for J1=J2=J3
-
-Each chain is indepentent, and stores the result as a temporary
-average. Afterwards, an average is made over all the chains (OK since
-they each have the same number of samples). 
+Similar to size_scaling_binning.jl
 
 =#
 
@@ -19,11 +13,9 @@ const SCMC = SemiClassicalMonteCarlo
 
 const ℂ = Complex{Float64}
 
-function collect_samples(chain=nothing)
+function collect_samples!(sc!)
     v = randomstate(Ns, L)
-    sc = 0
-    
-    println("Starting for chain $chain")
+
     # thermalization step
     mcstep!(H, v, T, p["thermal"])
 
@@ -34,58 +26,50 @@ function collect_samples(chain=nothing)
     ks = []
     
     # sampling step
-    for nsample = 1:nsamples_per_chain
-        println("Doing sample $nsample / $nsamples_per_chain for chain $chain")
+    for nsample = 1:nsamples
+        println("Doing sample $nsample / $nsamples")
         mcstep!(H, v, T, stride)
 
         # time evolution
+        # we still have to time evolve to improve the sampling
         vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
         
         # save measurements of interest
-        @views sc += scalarchirality(vs[:, :, :, 1])
-
+        @views sc![nsample] = scalarchirality(vs[:, :, :, 1])
+        
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
         
-        println("done $nsample / $nsamples_per_chain (chain $chain)")
+        println("done $nsample / $nsamples")
         flush(stdout)
-
-        # trigger the garbage collector manually
-        if chain == 1 && nsample % 50 == 0
-            println("Running GC manually ...")
-            GC.gc()
-        end
     end
-
-    sc
 end
 
 # Params
 # ======
 
-const p = Dict("comment" => "6x6, J1=J2=J3",
+@assert length(ARGS) == 1
+const p = Dict("comment" => "sc, QSL",
                "J1" => 1,
                "J2" => 1,
                "J3" => 1,
-               "L" => 6,
+               "L" => parse(Int, ARGS[1]),
                "T" => 0.1,
                "thermal" => 100_000,
-               "nchains" => 8, # because 8 cores on my laptop
-               "nsamples_per_chain" => 4_000, # so ~ 30k samples
-               "stride" => 100,
+               "nsamples" => 2^15,
+               "stride" => 50,
                # time evolution params
                "dt" => 100,
-               "nt" => 2,
+               "nt" => 2
                )
-output = "../data/scalar_chirality/sc6.h5"
+output = "../data/scalar_chirality/sc_qsl_$(ARGS[1]).h5"
 const H = loadhamiltonian("../hamiltonians/skl.dat", [p["J1"], p["J2"], p["J3"]])
 
 # variables often used have an alias
 const Ns = H.Ns
 const L = p["L"]
-const nchains = p["nchains"]
 const T = p["T"]
-const nsamples_per_chain = p["nsamples_per_chain"]
+const nsamples = p["nsamples"]
 const stride = p["stride"]
 const nt = p["nt"]
 
@@ -94,19 +78,10 @@ const Nsites = H.Ns * L^2 # number of sites in total
 # Running the simulation
 # ======================
 
-# storing results per chain should be thread safe
-sc = zeros(nchains)
+# use a single chain for simplicity
+sc = zeros(nsamples)
 
-Threads.@threads for n in 1:nchains
-    println("Starting for chain $n / $nchains ...")
-    sc[n] = collect_samples(n)
-end
-
-# normalize for each chain
-sc ./= nsamples_per_chain
-
-# then compute the means
-sc = mean(sc)
+collect_samples!(sc)
 
 # Saving
 # ======
