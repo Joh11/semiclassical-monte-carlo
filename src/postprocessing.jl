@@ -156,24 +156,31 @@ function skl_order_parameter(dimers)
 end
 
 # to see if the phase is planar or not
-"Computes the scalar chirality  Sᵢ⋅(Sⱼ×Sₖ), averaged over each triangle"
+"Computes the scalar chirality  Sᵢ⋅(Sⱼ×Sₖ), for each triangle"
 function scalarchirality(v)
+    ntriangles = 2
+    L = size(v, 2)
+    sc = zeros(ntriangles, L, L)
+
+    scalarchirality(v, sc)
+    sc
+end
+
+"Inplace version"
+function scalarchirality(v, sc!)
     Ns = size(v, 1)
     L = size(v, 2)
     
-    ret = 0
-
     # TODO hardcoded triangles
     # TODO skip the ones not perfectly in the unit cell
     triangles = [(1, 3, 4), (4, 6, 5)] # respect right hand rule
 
     for x in 1:L
         for y in 1:L
-            for (a, b, c) in triangles
-                @views ret += v[a, x, y] ⋅ (v[b, x, y] × v[c, x, y])
+            for (i, (a, b, c)) in enumerate(triangles)
+                @views sc![i, x, y] = v[a, x, y] ⋅ (v[b, x, y] × v[c, x, y])
             end
         end
     end
-    
-    ret /(Ns * L^2)
+    nothing
 end

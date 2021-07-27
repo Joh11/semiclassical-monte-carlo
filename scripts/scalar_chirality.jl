@@ -35,7 +35,7 @@ function collect_samples!(sc!)
         vs = simulate(H, v, p["dt"], nt, timeseries, ts, ks)
         
         # save measurements of interest
-        @views sc![nsample] = scalarchirality(vs[:, :, :, 1])
+        @views scalarchirality(vs[:, :, :, 1], sc![:, :, :, nsample])
         
         # use the last time evolved state
         @views v .= vs[:, :, :, end]
@@ -43,6 +43,7 @@ function collect_samples!(sc!)
         println("done $nsample / $nsamples")
         flush(stdout)
     end
+    nothing
 end
 
 # Params
@@ -79,7 +80,7 @@ const Nsites = H.Ns * L^2 # number of sites in total
 # ======================
 
 # use a single chain for simplicity
-sc = zeros(nsamples)
+sc = zeros(2, L, L, nsamples)
 
 collect_samples!(sc)
 

@@ -39,10 +39,21 @@ function load_sc(datapaths)
     sc = []
     for dp in datapaths
         h5open(dp) do f
-            push!(sc, read(f["sc"]))
+            # for now no error estimation
+            push!(sc, mean(read(f["sc"])))
         end
     end
     sc
+end
+
+function plot_sc(Ls, sc)
+    plt.figure()
+    plt.scatter(Ls, sc)
+
+    plt.xlabel(L"L")
+    plt.ylabel(L"\langle S_i \cdot (S_j \times S_k) \rangle")
+
+    plt.tight_layout()
 end
 
 Ls = [6]
@@ -54,8 +65,5 @@ datapaths = ["../data/scalar_chirality/sc$(L).h5" for L in Ls]
 sc = load_sc(datapaths)
 
 # plot it
-plt.figure()
-
-plt.scatter(Ls, sc)
-    
+plot_sc(Ls, sc)
 plt.show()
